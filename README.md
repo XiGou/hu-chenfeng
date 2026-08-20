@@ -1,21 +1,16 @@
-# 户晨风语录 · Loquitur
+# 户晨风 · 摘录
 
-户晨风的语录集静态站点，像一册泛黄的经文，以**百科 / 书**的形式供翻阅、检索与聆听。
+户晨风的**精华摘录**静态站点 —— 从 2023–2025 年直播文字稿中手工挑选的只言片语，以**极简主义**的风格呈现，专注文本与多媒体。
 
-基于 **Vite + Vue 3** 构建，采用现代前端工程化技术栈，站在巨人肩膀上打造精致美观的阅读体验。
+基于 **Vite + Vue 3** 构建，干净、留白、克制，无多余装饰。
 
 ## ✨ 特性
 
-- **现代化构建**：基于 [Vite](https://vitejs.dev/) + [Vue 3](https://vuejs.org/)，组件化开发、热更新、按需打包
-- **书的形式 · 目录索引**：首页按**分类分章**呈现目录（类书页），每个词条以“编号 + 摘要 + 标签”列目，一屏尽览、随手翻阅
-- **百科形式 · 双链接**：点击词条进入**详情页**，通过共享标签建立**相关词条双链接**——相关条目可互相跳转，形成双向互链（类维基百科“参见”）；标签亦可点击回到目录并按标签过滤
-- **翻书浏览**：详情页提供**上一篇 / 下一篇**翻页，以及标签总索引，方便连续翻阅与检索
-- **检索增强**：实时过滤正文、分类、日期与标签，关键词 / 分类 / 标签均可作为检索入口
-- **数据驱动**：所有语录集中在 `src/data/quotes.json`，新增语录无需改页面代码
-- **多媒体可选**：每篇语录可独立选择是否附带**音频、视频、超链接**（YouTube / Spotify）
-- **艺术化风格**：宋体衬线正文 × 书法标题 × 纸质感做旧背景 × 朱砂印章点缀
-- **高性能**：视频 iframe 懒加载、音频 `preload="none"`、检索实时过滤
-- **响应式 & 可访问性**：适配移动端，支持 `prefers-reduced-motion` 减少动效偏好
+- **极简主义 UI**：白底、留白、衬线正文，专注内容本身，无纸纹 / 印章 / 装饰性动效
+- **精华选读**：仅展示从全集文字稿中摘取的精华片段，安静阅读
+- **多媒体可选**：每条摘录可独立附带音频、视频、外链
+- **追溯出处**：每条摘录标注原始出处，可一键跳转到 HuChenFeng 全集对应章节
+- **Submodule 集成**：`reference/hu-chenfeng` 以 submodule 方式引入 [HuChenFeng 全集](https://github.com/Olcmyk/HuChenFeng)
 
 ## 🛠 技术栈
 
@@ -23,94 +18,69 @@
 |----|------|
 | 构建 | Vite 6 |
 | 框架 | Vue 3 (`<script setup>`) |
-| 样式 | 原生 CSS 变量 + scoped 样式 |
-| 语言 | ES Modules、现代 JS |
+| 样式 | 原生 CSS 变量 |
+| 素材 | `reference/hu-chenfeng` submodule |
 
 ## 🚀 本地开发
 
 ```bash
-# 安装依赖
+# 克隆时初始化 submodule
+git clone --recurse-submodules <repo>
+# 或对已克隆仓库：
+git submodule update --init --recursive
+
 npm install
-
-# 启动开发服务器（热更新，默认 http://localhost:5173）
-npm run dev
-
-# 生产构建，产物输出到 dist/
-npm run build
-
-# 本地预览构建产物
-npm run preview
+npm run dev      # 开发服务器（http://localhost:5173）
+npm run build    # 生产构建到 dist/
+npm run preview  # 预览构建产物
 ```
 
 ## ☁️ 部署
 
-### CNB 直接部署（当前默认）
+通过根目录 `.cnb.yml` 流水线，push 到 `main` 分支自动构建并部署：
 
-通过根目录 `.cnb.yml` 流水线，push 到 `main` 分支即自动构建校验并部署：
+- **构建**：初始化 submodule → `npm ci` → `vite build`
+- **公网部署**：将 `dist/` 静态产物同步到腾讯云 COS 对象存储（配合静态网站托管）。
+  需配置 `COS_SECRET_ID`、`COS_SECRET_KEY`、`COS_BUCKET`、`COS_REGION`（可选，默认 `ap-guangzhou`）。
+  未配置 COS 凭证时仅执行构建，部署自动跳过。
 
-- **构建**：`npm ci` 安装依赖 → `vite build` 打包到 `dist/`
-- **公网部署**：将 `dist/` 静态产物同步到腾讯云 COS 对象存储（配合静态网站托管对外访问）。
-  需在 CNB 流水线环境变量 / 密钥仓库中配置：
-  `COS_SECRET_ID`、`COS_SECRET_KEY`、`COS_BUCKET`、`COS_REGION`（可选，默认 `ap-guangzhou`）。
-  未配置 COS 凭证时，流水线仅执行构建，部署步骤自动跳过。
+## 📝 如何新增一条摘录
 
-### GitHub Actions（后期迁移到 GitHub Pages）
+编辑 `src/data/essence.js`，在 `essence` 数组中追加一条：
 
-仓库已内置 `.github/workflows/deploy.yml`，会先 `vite build` 再发布 `dist/` 到 Pages：
-
-1. 把仓库推送到 GitHub
-2. 仓库 `Settings → Pages → Build and deployment → Source` 选择 **GitHub Actions**
-3. push 到 `main`（或手动触发）后访问 `https://<username>.github.io/<repo>/`
-
-## 📝 如何新增一条语录
-
-编辑 `src/data/quotes.json`，在 `quotes` 数组中追加一条：
-
-```json
+```js
 {
-  "id": 9,
-  "date": "2025-01-01",
-  "category": "哲思",
-  "tags": ["智慧"],
-  "text": "语录正文……",
-  "audio": null,
-  "video": "https://www.youtube.com/embed/VIDEO_ID",
-  "links": [
-    { "type": "youtube", "label": "YouTube", "url": "https://youtu.be/VIDEO_ID" },
-    { "type": "spotify", "label": "Spotify", "url": "https://open.spotify.com/track/TRACK_ID" }
+  id: 11,
+  date: "2025-01-14",                          // 直播日期 YYYY-MM-DD
+  theme: "节奏",                                // 主题标签
+  text: "摘录的正文……",                         // 文本
+  source: "reference/hu-chenfeng/2025年01月/2025-01-14.md", // 原始出处
+  audio: null,                                  // 音频路径（可选）
+  video: "https://www.youtube.com/embed/VIDEO_ID",          // 视频（可选）
+  links: [                                      // 外链（可选）
+    { type: "youtube", label: "YouTube", url: "..." }
   ]
 }
 ```
 
-字段说明：
-
-| 字段 | 必填 | 说明 |
-|------|------|------|
-| `text` | ✅ | 语录正文 |
-| `category` | — | 分类，缺省显示"未分类" |
-| `date` | — | 日期，格式 `YYYY-MM-DD` |
-| `tags` | — | 标签数组 |
-| `audio` | — | 音频文件路径；有则显示播放器 |
-| `video` | — | YouTube 内嵌地址（`/embed/`）；有则懒加载视频 |
-| `links` | — | 外部链接数组（YouTube / Spotify 等） |
-
-> 音频文件建议放到 `public/` 或 `src/assets/media/` 目录下。
+> 出处路径对应 `reference/hu-chenfeng` submodule 内的文件，便于追溯完整上下文。
 
 ## 📁 项目结构
 
 ```
-├── index.html              # Vite 入口 HTML
-├── vite.config.js          # Vite 配置（别名、分包、构建）
+├── index.html                  # Vite 入口 HTML
+├── vite.config.js              # Vite 配置
+├── reference/hu-chenfeng       # HuChenFeng 全集 submodule
 ├── src/
-│   ├── main.js             # Vue 应用入口
-│   ├── App.vue             # 根组件（目录 / 词条视图路由）
-│   ├── data/quotes.json    # 语录数据
-│   ├── styles/main.css     # 全局样式（纸墨印主题）
+│   ├── main.js                 # Vue 应用入口
+│   ├── App.vue                 # 根组件（列表 / 详情视图切换）
+│   ├── data/essence.js         # 精华摘录数据（含 meta）
+│   ├── styles/main.css         # 极简全局样式
 │   └── components/
-│       ├── Masthead.vue    # 书封页眉 + 检索框
-│       ├── Toc.vue         # 目录（书页）视图
-│       └── Entry.vue       # 百科词条详情（双链接 + 翻页）
-├── public/404.html         # 404 页面
-├── .cnb.yml                # CNB 构建部署流水线
-└── .github/workflows/      # GitHub Actions 部署
+│       ├── Masthead.vue        # 页头
+│       ├── Toc.vue             # 摘录列表
+│       └── Entry.vue           # 详情（文本 + 多媒体 + 出处）
+├── public/404.html             # 404 页面
+├── .cnb.yml                    # CNB 构建部署流水线
+└── .github/workflows/          # GitHub Actions 部署
 ```
