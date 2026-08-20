@@ -8,8 +8,10 @@
 
 - **极简主义 UI**：白底、留白、衬线正文，专注内容本身，无纸纹 / 印章 / 装饰性动效
 - **精华选读**：仅展示从全集文字稿中摘取的精华片段，安静阅读
+- **实时检索**：首页搜索框可按关键词 / 主题 / 日期实时过滤，详情页点击主题标签一键检索同类语录
 - **多媒体可选**：每条摘录可独立附带音频、视频、外链
 - **追溯出处**：每条摘录标注原始出处，可一键跳转到 HuChenFeng 全集对应章节
+- **悬浮 BGM 播放器**：右下角悬浮迷你播放器，可在多首静态 BGM 中任选一首循环播放
 - **Submodule 集成**：`reference/hu-chenfeng` 以 submodule 方式引入 [HuChenFeng 全集](https://github.com/Olcmyk/HuChenFeng)
 
 ## 🛠 技术栈
@@ -65,6 +67,14 @@ npm run preview  # 预览构建产物
 
 > 出处路径对应 `reference/hu-chenfeng` submodule 内的文件，便于追溯完整上下文。
 
+## 🎵 背景音乐（BGM）
+
+右下角悬浮迷你播放器支持从几首静态 BGM 中任选一首循环播放。曲目配置在
+`src/data/bgm.js`，音频文件放入 `public/bgm/` 目录（文件名与配置一致即可）。
+
+受版权限制，仓库默认不托管受版权保护的音频文件；将对应音频放入后播放器即可选择。
+详见 `public/bgm/README.md`。
+
 ## 📁 项目结构
 
 ```
@@ -75,11 +85,13 @@ npm run preview  # 预览构建产物
 │   ├── main.js                 # Vue 应用入口
 │   ├── App.vue                 # 根组件（列表 / 详情视图切换）
 │   ├── data/essence.js         # 精华摘录数据（含 meta）
+│   ├── data/bgm.js             # 悬浮播放器的 BGM 曲目配置
 │   ├── styles/main.css         # 极简全局样式
 │   └── components/
 │       ├── Masthead.vue        # 页头
-│       ├── Toc.vue             # 摘录列表
-│       └── Entry.vue           # 详情（文本 + 多媒体 + 出处）
+│       ├── Toc.vue             # 摘录列表 + 实时检索
+│       ├── Entry.vue           # 详情（文本 + 多媒体 + 出处）
+│       └── BgmPlayer.vue       # 悬浮迷你 BGM 音乐播放器
 ├── public/404.html             # 404 页面
 ├── .cnb.yml                    # CNB 构建部署流水线
 └── .github/workflows/          # GitHub Actions 部署

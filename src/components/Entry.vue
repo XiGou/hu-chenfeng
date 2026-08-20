@@ -4,7 +4,7 @@ import { ref, onMounted, watch } from "vue";
 const props = defineProps({
   quote: { type: Object, required: true },
 });
-const emit = defineEmits(["back"]);
+const emit = defineEmits(["back", "search"]);
 
 const videoLoaded = ref(false);
 const videoEl = ref(null);
@@ -49,7 +49,13 @@ onMounted(() => {
   <article class="entry">
     <div class="entry-meta">
       <time>{{ fmtDate(quote.date) }}</time>
-      <span class="theme">{{ quote.theme }}</span>
+      <button
+        v-if="quote.theme"
+        class="theme"
+        type="button"
+        :title="'搜索所有「' + quote.theme + '」语录'"
+        @click="emit('search', quote.theme)"
+      >{{ quote.theme }}</button>
     </div>
 
     <blockquote>{{ quote.text }}</blockquote>
