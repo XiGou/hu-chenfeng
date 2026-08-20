@@ -1,0 +1,22 @@
+{
+  "name": "hu-chenfeng-loquitur",
+  "version": "2.0.0",
+  "private": true,
+  "type": "module",
+  "description": "户晨风语录 · Loquitur —— 基于 Vite + Vue 3 的语录集站点",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "vue": "^3.5.13"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^5.2.1",
+    "vite": "^6.0.7"
+  },
+  "allowScripts": {
+    "esbuild@0.25.12": true
+  }
+}

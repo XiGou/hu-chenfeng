@@ -2,7 +2,7 @@
 # .github/workflows/deploy.yml — GitHub Actions 部署工作流
 #
 # 说明：本仓库当前由 CNB 云原生构建直接部署（见根目录 .cnb.yml）。
-# 若后期迁移到 GitHub，启用本工作流即可将静态站点一键发布到 GitHub Pages。
+# 若后期迁移到 GitHub，启用本工作流即可将 Vite 构建产物一键发布到 GitHub Pages。
 #
 # 迁移步骤：
 #   1. 将仓库推送到 GitHub
@@ -35,21 +35,33 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  # 1. 构建：站点为纯静态，无需编译，仅做产物归档
+  # 1. 构建：使用 Vite 打包生成静态产物
   build:
     runs-on: ubuntu-latest
     steps:
       - name: 检出代码
         uses: actions/checkout@v4
 
+      - name: 安装 Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: 安装依赖
+        run: npm ci
+
+      - name: Vite 构建
+        run: npm run build
+
       - name: 配置 GitHub Pages
         uses: actions/configure-pages@v5
 
-      - name: 上传静态站点产物
+      - name: 上传 Vite 构建产物
         uses: actions/upload-pages-artifact@v3
         with:
-          # 纯静态站点，直接部署仓库根目录
-          path: .
+          # 部署 Vite 的 dist 产物目录
+          path: dist
 
   # 2. 部署：发布到 GitHub Pages
   deploy:
