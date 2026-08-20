@@ -1,0 +1,76 @@
+# ==========================================================================
+# .github/workflows/deploy.yml — GitHub Actions 部署工作流
+#
+# 说明：本仓库当前由 CNB 云原生构建直接部署（见根目录 .cnb.yml）。
+# 若后期迁移到 GitHub，启用本工作流即可将 Vite 构建产物一键发布到 GitHub Pages。
+#
+# 迁移步骤：
+#   1. 将仓库推送到 GitHub
+#   2. 仓库 Settings → Pages → Build and deployment → Source 选择 "GitHub Actions"
+#   3. push 到 main（或手动触发）后，站点将发布到
+#      https://<username>.github.io/<repo>/
+#
+# 触发方式：
+#   - push 到 main 分支（自动）
+#   - 手动触发（Workflow dispatch，可指定部署分支）
+# ==========================================================================
+name: Deploy to GitHub Pages
+
+on:
+  # 推送 main 分支时自动部署
+  push:
+    branches: [main]
+  # 允许手动触发，便于选择任意分支一键部署
+  workflow_dispatch:
+
+# 授予 GITHUB_TOKEN 部署 Pages 所需的权限
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# 同一时间只允许一个部署任务，后触发的会取消排队的旧任务
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
+
+jobs:
+  # 1. 构建：使用 Vite 打包生成静态产物
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 安装 Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: 安装依赖
+        run: npm ci
+
+      - name: Vite 构建
+        run: npm run build
+
+      - name: 配置 GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: 上传 Vite 构建产物
+        uses: actions/upload-pages-artifact@v3
+        with:
+          # 部署 Vite 的 dist 产物目录
+          path: dist
+
+  # 2. 部署：发布到 GitHub Pages
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: 部署到 GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

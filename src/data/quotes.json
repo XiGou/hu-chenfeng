@@ -2,7 +2,7 @@
   "meta": {
     "title": "户晨风语录",
     "subtitle": "Loquitur · 言如圣经",
-    "description": "户晨风的语录集，供翻阅、检索与聆听。"
+    "description": "拾取只言片语，如翻阅一册泛黄的经文。"
   },
   "quotes": [
     {
@@ -21,7 +21,7 @@
       "category": "感悟",
       "tags": ["坚持", "梦想"],
       "text": "每一个不曾起舞的日子，都是对生命的辜负。",
-      "audio": "assets/media/quote-2.mp3",
+      "audio": null,
       "video": null,
       "links": [
         { "type": "youtube", "label": "YouTube", "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ" },
@@ -44,8 +44,8 @@
       "category": "哲思",
       "tags": ["时间", "自由"],
       "text": "真正的自由，不是随心所欲，而是自我主宰。",
-      "audio": "assets/media/quote-4.mp3",
-      "video": "https://www.youtube.com/embed/dQw4w9WgXcQ",
+      "audio": null,
+      "video": null,
       "links": [
         { "type": "spotify", "label": "Spotify", "url": "https://open.spotify.com/track/1D3WAZ6kLbA6mpZ7m9nNrm" }
       ]
@@ -56,6 +56,36 @@
       "category": "日常",
       "tags": ["家庭", "爱"],
       "text": "家人闲坐，灯火可亲。",
+      "audio": null,
+      "video": null,
+      "links": []
+    },
+    {
+      "id": 6,
+      "date": "2024-08-12",
+      "category": "读书",
+      "tags": ["阅读", "涵养"],
+      "text": "读未见书，如得良友；读已见书，如逢故人。",
+      "audio": null,
+      "video": null,
+      "links": []
+    },
+    {
+      "id": 7,
+      "date": "2024-10-02",
+      "category": "处世",
+      "tags": ["谦逊", "静气"],
+      "text": "水深不语，人稳不言。越是安静，越有力量。",
+      "audio": null,
+      "video": null,
+      "links": []
+    },
+    {
+      "id": 8,
+      "date": "2024-12-25",
+      "category": "哲思",
+      "tags": ["初心", "宁静"],
+      "text": "愿我们都能守住内心的那一点光，不为外物所动。",
       "audio": null,
       "video": null,
       "links": []
