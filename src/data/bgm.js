@@ -11,28 +11,23 @@
 
 export const bgmTracks = [
   {
-    id: "hcf-xiaoqu",
-    label: "户晨风小曲",
-    src: "/bgm/hu-chenfeng-xiaoqu.mp3",
-  },
-  {
     id: "youjing",
-    label: "游京",
-    src: "/bgm/youjing.mp3",
+    label: "私有化の小曲 · 游京",
+    src: "/bgm/私有化小曲-游京DJ.mp3",
   },
   {
     id: "andalusia",
-    label: "《购买力的小曲》· Andalusia（Antoine Chambe）",
-    src: "/bgm/andalusia.mp3",
+    label: "购买力の小曲 · Andalusia",
+    src: "/bgm/购买力の小曲-Hi-Res无损音质-Andalusia.mp3",
   },
   {
     id: "anlizhaomi",
-    label: "收入公开小曲 · 暗里着迷（刘德华）",
-    src: "/bgm/anlizhaomi.mp3",
+    label: "收入公开の小曲 · 暗里着迷（1993年刘德华演唱的粤语流行歌曲）",
+    src: "/bgm/公布收入小曲-吉他的天空-暗里着迷.mp3",
   },
   {
     id: "qifengle",
-    label: "起风了 · 纯音乐",
-    src: "/bgm/qifengle.mp3",
+    label: "汽修工の黄粱一梦小曲 · 起风了-纯音乐",
+    src: "/bgm/汽修工黄粱一梦的小曲-收入结算的小曲-起风了纯音乐-高桥优.mp3",
   },
 ];
