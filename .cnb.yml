@@ -18,8 +18,9 @@
 #
 # 【GitHub 同步说明】
 #   通过 imports 引用密钥仓库 `secret-env` 中的 `secret-env.yml` 文件，
-#   该文件包含 GitHub PAT（变量名支持 GITHUB_PAT / GH_PAT / GH_TOKEN /
-#   GITHUB_TOKEN / GITHUB_ACCESS_TOKEN），用于将代码自动推送到 GitHub 同名仓库。
+#   该文件包含 GitHub PAT 与用户名（变量名支持 GIT_ACCESS_TOKEN /
+#   GITHUB_PAT / GH_PAT / GH_TOKEN / GITHUB_TOKEN / GITHUB_ACCESS_TOKEN），
+#   用于将代码自动推送到 GitHub 同名仓库。用户名支持 GIT_USERNAME 设置。
 # ==========================================================================
 
 main:
@@ -70,11 +71,16 @@ main:
 
         # ---- 同步到 GitHub 同名仓库 ----
         - name: 同步代码到 GitHub
-          if: '[ -n "$GITHUB_PAT" ] || [ -n "$GH_PAT" ] || [ -n "$GH_TOKEN" ] || [ -n "$GITHUB_TOKEN" ] || [ -n "$GITHUB_ACCESS_TOKEN" ]'
+          if: '[ -n "$GIT_ACCESS_TOKEN" ] || [ -n "$GITHUB_PAT" ] || [ -n "$GH_PAT" ] || [ -n "$GH_TOKEN" ] || [ -n "$GITHUB_TOKEN" ] || [ -n "$GITHUB_ACCESS_TOKEN" ]'
           script: |
             set -e
             # 兼容多种环境变量命名
-            PAT="${GITHUB_PAT:-${GH_PAT:-${GH_TOKEN:-${GITHUB_TOKEN:-${GITHUB_ACCESS_TOKEN}}}}}"
+            PAT="${GIT_ACCESS_TOKEN:-${GITHUB_PAT:-${GH_PAT:-${GH_TOKEN:-${GITHUB_TOKEN:-${GITHUB_ACCESS_TOKEN}}}}}}"
+
+            echo "==> 配置 Git 身份"
+            git config --global user.name "${GIT_USERNAME:-${GITHUB_ACTOR:-hu-chenfeng-bot}}"
+            git config --global user.email "${GITHUB_ACTOR_EMAIL:-bot@users.noreply.github.com}"
+
             echo "==> 配置 GitHub 远程仓库"
             GITHUB_REPO="XiGou/hu-chenfeng"
             git remote remove github 2>/dev/null || true
