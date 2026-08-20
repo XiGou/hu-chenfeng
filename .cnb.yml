@@ -30,6 +30,8 @@ main:
         - name: 安装依赖并构建
           script: |
             set -e
+            echo "==> 初始化 submodule（HuChenFeng 参考仓库）"
+            git submodule update --init --recursive || echo "警告：submodule 初始化失败，跳过（构建不依赖其内容）"
             echo "==> 安装依赖"
             npm ci
             echo "==> Vite 生产构建"

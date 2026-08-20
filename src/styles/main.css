@@ -1,257 +1,259 @@
 /* ==========================================================================
-   户晨风语录 · 纸 · 墨 · 印
-   主题：宋体衬线 × 铜版印刷 × 打字机 × 纸质感
-   基于 Vite + Vue 3 构建
+   户晨风 · 摘录 — 极简主义
+   干净、留白、克制。仅以文本与多媒体为核心。
    ========================================================================== */
 
 :root {
-  /* 纸张与墨色 */
-  --paper: #f4efe4;
-  --paper-deep: #e9e0cd;
-  --ink: #2b2620;
-  --ink-soft: #6b6153;
-  --vermillion: #a63026;   /* 朱砂红，印章与点缀 */
-  --line: rgba(43, 38, 32, 0.14);
+  --bg: #ffffff;
+  --fg: #1a1a1a;
+  --fg-soft: #6f6f6f;
+  --fg-faint: #a8a8a8;
+  --line: #ececec;
+  --accent: #111111;
+  --accent-hover: #000000;
 
-  /* 字体栈 */
-  --font-song: "Noto Serif SC", "Source Han Serif SC", "Songti SC", "STSong",
-               "SimSun", serif;
-  --font-kai: "Ma Shan Zheng", "Kaiti SC", "STKaiti", "KaiTi", serif;
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, "PingFang SC", "Microsoft YaHei", sans-serif;
+  --font-serif: Georgia, "Times New Roman", "Songti SC", "Noto Serif SC",
+    "SimSun", serif;
 
-  /* 布局 */
-  --max-w: 720px;
-  --radius: 14px;
-  --shadow-card: 0 1px 2px rgba(43, 38, 32, 0.05),
-                 0 12px 28px rgba(43, 38, 32, 0.06);
-
-  --ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --max-w: 680px;
 }
 
-/* ---------- 基础 ---------- */
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
 html { scroll-behavior: smooth; }
 
 body {
-  font-family: var(--font-song);
-  color: var(--ink);
-  background:
-    radial-gradient(ellipse at 50% 0%, rgba(90, 70, 40, 0.07), transparent 62%),
-    var(--paper);
-  min-height: 100vh;
-  line-height: 1.9;
+  font-family: var(--font-sans);
+  color: var(--fg);
+  background: var(--bg);
+  line-height: 1.7;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }
 
-/* 纸质感噪点背景 */
-body::after {
-  content: "";
-  position: fixed;
-  inset: 0;
-  z-index: 9999;
-  pointer-events: none;
-  opacity: 0.4;
-  background-image:
-    radial-gradient(circle at 20% 30%, rgba(120, 100, 70, 0.06) 0 1.5px, transparent 1.5px),
-    radial-gradient(circle at 70% 60%, rgba(90, 70, 40, 0.05) 0 1px, transparent 1px);
-  background-size: 240px 240px, 320px 320px;
-  mix-blend-mode: multiply;
-}
-
 #app {
-  position: relative;
-  z-index: 1;
   max-width: var(--max-w);
   margin: 0 auto;
-  padding: 0 20px 4rem;
+  padding: 0 24px 6rem;
 }
 
-/* ==========================================================================
-   Masthead · 页眉
-   ========================================================================== */
-.masthead {
-  text-align: center;
-  padding: 4.5rem 0 2.5rem;
-  position: relative;
+/* ---------- 通用 ---------- */
+a { color: inherit; }
+
+.sr-only {
+  position: absolute;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap; border: 0;
 }
 
-.masthead .seal {
-  width: 64px;
-  height: 64px;
-  margin: 0 auto 1.4rem;
-  display: grid;
-  place-items: center;
-  font-family: var(--font-kai);
-  font-size: 1.9rem;
-  color: #f6ece0;
-  background: var(--vermillion);
-  border-radius: 6px;
-  box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.35),
-              inset 0 0 0 4px var(--vermillion),
-              0 6px 16px rgba(166, 48, 38, 0.35);
-  transform: rotate(-3deg);
-  animation: seal-in 0.9s var(--ease) both;
+/* ---------- 页头 ---------- */
+.site-head {
+  padding: 5rem 0 3rem;
 }
-
-@keyframes seal-in {
-  from { opacity: 0; transform: rotate(-12deg) scale(0.6); }
-  to   { opacity: 1; transform: rotate(-3deg) scale(1); }
+.site-head h1 {
+  font-family: var(--font-serif);
+  font-size: clamp(1.8rem, 5vw, 2.4rem);
+  font-weight: 500;
+  letter-spacing: 0.02em;
 }
-
-.masthead .title {
-  font-family: var(--font-song);
-  font-weight: 700;
-  font-size: clamp(2rem, 6vw, 2.8rem);
-  letter-spacing: 0.18em;
-  text-indent: 0.18em;
-  color: var(--ink);
-  margin-bottom: 0.6rem;
+.site-head .sub {
+  margin-top: 0.5rem;
+  font-size: 0.95rem;
+  color: var(--fg-soft);
 }
-
-.masthead .title .accent {
-  color: var(--vermillion);
-}
-
-.masthead .subtitle {
-  font-family: var(--font-kai);
-  font-size: 1.15rem;
-  color: var(--ink-soft);
-  letter-spacing: 0.12em;
-  margin-bottom: 1rem;
-}
-
-.masthead .lede {
-  font-size: 1rem;
-  color: var(--ink-soft);
-  opacity: 0.85;
+.site-head .desc {
+  margin-top: 1.2rem;
+  font-size: 0.92rem;
+  color: var(--fg-faint);
   max-width: 30em;
-  margin: 0 auto 2.2rem;
+}
+.site-head::after {
+  content: "";
+  display: block;
+  width: 100%;
+  height: 1px;
+  background: var(--line);
+  margin-top: 2.5rem;
 }
 
-/* 装饰线 */
-.masthead::before {
-  content: "◆ ─ ◆ ─ ◆";
+/* ---------- 列表 ---------- */
+.list-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 1.2rem;
+}
+.list-head .label {
+  font-size: 0.8rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--fg-faint);
+}
+.list-head .count {
+  font-size: 0.85rem;
+  color: var(--fg-soft);
+}
+
+.item-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+}
+.item {
+  border-bottom: 1px solid var(--line);
+}
+.item:last-child { border-bottom: none; }
+
+.item-btn {
   display: block;
-  color: var(--vermillion);
-  opacity: 0.5;
-  letter-spacing: 0.3em;
-  font-size: 0.7rem;
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  padding: 1.5rem 0;
+  cursor: pointer;
+  font-family: inherit;
+}
+.item-btn:hover .item-text { color: var(--accent-hover); }
+
+.item-meta {
+  font-size: 0.78rem;
+  color: var(--fg-faint);
+  display: flex;
+  gap: 0.7rem;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+.item-theme {
+  font-size: 0.72rem;
+  color: var(--fg);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 0.05rem 0.6rem;
+}
+.item-text {
+  font-family: var(--font-serif);
+  font-size: 1.1rem;
+  line-height: 1.8;
+  color: var(--fg);
+  transition: color 0.2s ease;
+}
+
+/* ---------- 详情 ---------- */
+.back-btn {
+  margin-top: 2.5rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.9rem;
+  color: var(--fg-soft);
+  padding: 0.5rem 0;
+}
+.back-btn:hover { color: var(--fg); }
+
+.entry {
+  padding: 2.5rem 0 3rem;
+}
+.entry .entry-meta {
+  display: flex;
+  gap: 0.8rem;
+  align-items: center;
+  font-size: 0.82rem;
+  color: var(--fg-faint);
   margin-bottom: 1.4rem;
 }
+.entry .entry-meta .theme {
+  color: var(--fg);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 0.05rem 0.7rem;
+}
+.entry blockquote {
+  font-family: var(--font-serif);
+  font-size: 1.5rem;
+  line-height: 1.9;
+  color: var(--fg);
+  margin-bottom: 2rem;
+}
 
-/* ---------- 检索框 ---------- */
-.search-box {
+.entry .media {
+  margin-top: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--line);
+}
+.entry .media audio { width: 100%; height: 40px; }
+.entry .media-video-wrap {
   position: relative;
-  max-width: 440px;
-  margin: 0 auto;
+  aspect-ratio: 16 / 9;
+  background: #000;
 }
-
-.search-box input {
-  width: 100%;
-  padding: 0.85rem 3rem 0.85rem 1.2rem;
-  font-family: var(--font-song);
-  font-size: 0.98rem;
-  color: var(--ink);
-  background: rgba(255, 255, 255, 0.55);
+.entry .media-video-wrap iframe {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%; border: 0;
+}
+.entry .media-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.7rem;
+}
+.entry .media-link {
+  font-size: 0.85rem;
+  color: var(--fg-soft);
+  text-decoration: none;
+  padding: 0.35rem 0.9rem;
   border: 1px solid var(--line);
   border-radius: 999px;
-  outline: none;
-  transition: box-shadow 0.3s var(--ease), border-color 0.3s var(--ease),
-              background 0.3s var(--ease);
+  transition: all 0.2s ease;
 }
+.entry .media-link:hover { color: var(--fg); border-color: var(--fg-faint); }
 
-.search-box input::placeholder { color: var(--ink-soft); opacity: 0.7; }
-
-.search-box input:focus {
-  background: rgba(255, 255, 255, 0.85);
-  border-color: var(--vermillion);
-  box-shadow: 0 0 0 3px rgba(166, 48, 38, 0.12);
+.entry .source {
+  margin-top: 2.5rem;
+  font-size: 0.82rem;
+  color: var(--fg-faint);
+  line-height: 1.6;
 }
-
-.search-box .search-glyph {
-  position: absolute;
-  right: 1.1rem;
-  top: 50%;
-  transform: translateY(-50%);
-  color: var(--vermillion);
-  opacity: 0.75;
-  pointer-events: none;
+.entry .source code {
+  font-size: 0.78rem;
+  background: var(--line);
+  padding: 0.1rem 0.35rem;
+  border-radius: 4px;
 }
+.entry .source a { color: var(--fg-soft); text-decoration: none; }
+.entry .source a:hover { color: var(--fg); text-decoration: underline; }
 
-/* ==========================================================================
-   Toolbar · 工具行（通用）
-   ========================================================================== */
-.ghost-btn {
-  font-family: var(--font-song);
-  font-size: 0.88rem;
-  color: var(--ink-soft);
-  background: transparent;
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  padding: 0.45rem 1rem;
-  cursor: pointer;
-  transition: all 0.25s var(--ease);
-}
-
-.ghost-btn:hover {
-  color: var(--vermillion);
-  border-color: var(--vermillion);
-  background: rgba(166, 48, 38, 0.06);
-}
-
-/* ==========================================================================
-   Empty & Footer
-   ========================================================================== */
-.empty {
-  text-align: center;
-  padding: 4rem 1rem;
-  color: var(--ink-soft);
-  font-size: 1rem;
-  animation: card-in 0.4s var(--ease) both;
-}
-
-.colophon {
-  text-align: center;
-  margin-top: 4rem;
+/* ---------- 页脚 ---------- */
+.site-foot {
+  margin-top: 5rem;
   padding-top: 1.6rem;
   border-top: 1px solid var(--line);
-  color: var(--ink-soft);
-  font-size: 0.9rem;
-  letter-spacing: 0.1em;
+  font-size: 0.82rem;
+  color: var(--fg-faint);
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.6rem;
 }
-
-.colophon .seal-sm {
-  display: inline-block;
-  margin-bottom: 0.8rem;
-  font-family: var(--font-kai);
-  color: var(--vermillion);
-  border: 1.5px solid var(--vermillion);
-  border-radius: 4px;
-  padding: 0.15rem 0.5rem;
-  font-size: 0.95rem;
-  transform: rotate(-3deg);
-}
-
-/* ---------- 打字机动画（书封标题用） ---------- */
-.typewriter .title::after {
-  content: "▍";
-  color: var(--vermillion);
-  animation: blink 0.8s step-end infinite;
-}
-
-@keyframes blink {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0; }
-}
+.site-foot a { color: var(--fg-soft); text-decoration: none; }
+.site-foot a:hover { color: var(--fg); text-decoration: underline; }
 
 /* ---------- 响应式 ---------- */
-@media (max-width: 560px) {
-  #app { padding: 0 16px 3rem; }
-  .masthead { padding-top: 3rem; }
+@media (max-width: 520px) {
+  #app { padding: 0 18px 4rem; }
+  .site-head { padding-top: 3.5rem; }
+  .entry blockquote { font-size: 1.25rem; }
 }
 
 /* ---------- 减少动效偏好 ---------- */
 @media (prefers-reduced-motion: reduce) {
-  * { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
+  * { transition-duration: 0.001ms !important; }
 }
