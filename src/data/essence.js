@@ -21,6 +21,7 @@ export const essence = [
     theme: "节奏",
     text: "我的人生啊，可以说是跟绝大部分人不一样。我的人生是——你看视频需要加速吧？我一般都加速的。我的人生是三倍速。",
     source: "reference/hu-chenfeng/2025年01月/2025-01-14.md",
+    audio: "/audio/quotes/2025-01-14.mp3",
   },
   {
     id: 2,
@@ -35,6 +36,9 @@ export const essence = [
     theme: "现实",
     text: "有钱人能享受到更好的食物，本来就是啊，这个难道不是社会现实吗？",
     source: "reference/hu-chenfeng/2023年11月/2023-11-15.md",
+    links: [
+      { type: "youtube", label: "完整直播录像", url: "https://www.youtube.com/results?search_query=户晨风+2023-11-15" },
+    ],
   },
   {
     id: 4,
