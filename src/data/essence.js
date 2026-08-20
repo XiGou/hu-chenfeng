@@ -14,6 +14,9 @@ export const meta = {
 };
 
 // source 指向 submodule 内相对路径；date 用于展示
+// 兼容 GitHub Pages 子路径部署的静态资源基址
+const base = import.meta.env.BASE_URL || "/";
+
 export const essence = [
   {
     id: 1,
@@ -21,7 +24,7 @@ export const essence = [
     theme: "节奏",
     text: "我的人生啊，可以说是跟绝大部分人不一样。我的人生是——你看视频需要加速吧？我一般都加速的。我的人生是三倍速。",
     source: "reference/hu-chenfeng/2025年01月/2025-01-14.md",
-    audio: "/audio/quotes/2025-01-14.mp3",
+    audio: `${base}audio/quotes/2025-01-14.mp3`,
   },
   {
     id: 2,
