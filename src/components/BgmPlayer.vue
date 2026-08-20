@@ -65,6 +65,21 @@ onMounted(() => {
 <template>
   <!-- 悬浮迷你播放器 -->
   <div class="bgm" :class="{ 'bgm--open': open }">
+    <!--
+      audio 元素始终渲染（不随面板展开/收起而销毁），
+      这样即使收起面板或切换页面，音乐也能持续播放。
+    -->
+    <audio
+      v-if="current"
+      ref="audioEl"
+      :src="current.src"
+      loop
+      preload="none"
+      @play="onPlay"
+      @pause="onPause"
+      @ended="onEnded"
+    ></audio>
+
     <!-- 悬浮球 -->
     <button
       class="bgm-ball"
@@ -88,17 +103,6 @@ onMounted(() => {
           <span class="bgm-title">背景音乐 · BGM</span>
           <button class="bgm-close" type="button" aria-label="关闭" @click="toggle">✕</button>
         </div>
-
-        <audio
-          v-if="current"
-          ref="audioEl"
-          :src="current.src"
-          loop
-          preload="none"
-          @play="onPlay"
-          @pause="onPause"
-          @ended="onEnded"
-        ></audio>
 
         <!-- 曲目选择 -->
         <ul class="bgm-tracks">
