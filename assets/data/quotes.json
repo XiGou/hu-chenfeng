@@ -1,0 +1,64 @@
+{
+  "meta": {
+    "title": "户晨风语录",
+    "subtitle": "Loquitur · 言如圣经",
+    "description": "户晨风的语录集，供翻阅、检索与聆听。"
+  },
+  "quotes": [
+    {
+      "id": 1,
+      "date": "2024-01-15",
+      "category": "日常",
+      "tags": ["生活", "思考"],
+      "text": "生活不是等待风暴过去，而是学会在雨中跳舞。",
+      "audio": null,
+      "video": null,
+      "links": []
+    },
+    {
+      "id": 2,
+      "date": "2024-02-03",
+      "category": "感悟",
+      "tags": ["坚持", "梦想"],
+      "text": "每一个不曾起舞的日子，都是对生命的辜负。",
+      "audio": "assets/media/quote-2.mp3",
+      "video": null,
+      "links": [
+        { "type": "youtube", "label": "YouTube", "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ" },
+        { "type": "spotify", "label": "Spotify", "url": "https://open.spotify.com/track/4cOdK2wGLETKBW3PvgPWqT" }
+      ]
+    },
+    {
+      "id": 3,
+      "date": "2024-03-21",
+      "category": "处世",
+      "tags": ["智慧", "宁静"],
+      "text": "知者不惑，仁者不忧，勇者不惧。",
+      "audio": null,
+      "video": "https://www.youtube.com/embed/ScMzIvxBSi4",
+      "links": []
+    },
+    {
+      "id": 4,
+      "date": "2024-05-09",
+      "category": "哲思",
+      "tags": ["时间", "自由"],
+      "text": "真正的自由，不是随心所欲，而是自我主宰。",
+      "audio": "assets/media/quote-4.mp3",
+      "video": "https://www.youtube.com/embed/dQw4w9WgXcQ",
+      "links": [
+        { "type": "spotify", "label": "Spotify", "url": "https://open.spotify.com/track/1D3WAZ6kLbA6mpZ7m9nNrm" }
+      ]
+    },
+    {
+      "id": 5,
+      "date": "2024-06-30",
+      "category": "日常",
+      "tags": ["家庭", "爱"],
+      "text": "家人闲坐，灯火可亲。",
+      "audio": null,
+      "video": null,
+      "links": []
+    }
+  ]
+}

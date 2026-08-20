@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>户晨风语录 · Loquitur</title>
+  <meta name="description" content="户晨风的语录集，供翻阅、检索与聆听。" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="assets/css/style.css" />
+</head>
+<body>
+  <!-- 纸质感纹理背景层 -->
+  <div class="paper-grain" aria-hidden="true"></div>
+
+  <header class="masthead">
+    <div class="masthead-inner">
+      <div class="seal" aria-hidden="true">晨</div>
+      <h1 class="title" id="site-title">户晨风语录</h1>
+      <p class="subtitle" id="site-subtitle">Loquitur · 言如圣经</p>
+      <p class="lede" id="site-description">拾取只言片语，如翻阅一册泛黄的经文。</p>
+
+      <div class="search-box" role="search">
+        <label class="sr-only" for="search">检索语录</label>
+        <input type="search" id="search" name="search" placeholder="检索语录关键词…" autocomplete="off" />
+        <span class="search-glyph" aria-hidden="true">✻</span>
+      </div>
+    </div>
+  </header>
+
+  <main class="content">
+    <div class="count-row">
+      <span id="count" class="count">共 0 篇</span>
+      <button id="toggle-typewriter" class="ghost-btn" type="button">🔤 打字机动画</button>
+    </div>
+
+    <section id="quotes" class="quotes" aria-live="polite"></section>
+
+    <p id="empty" class="empty" hidden>未检索到相关语录。</p>
+  </main>
+
+  <footer class="colophon">
+    <p>户晨风语录 · 以纸为证，以言为铭</p>
+  </footer>
+
+  <script src="assets/js/main.js" defer></script>
+</body>
+</html>
