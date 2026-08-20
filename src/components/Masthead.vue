@@ -2,11 +2,10 @@
 defineProps({
   meta: { type: Object, required: true },
   keyword: { type: String, default: "" },
-  typewriter: { type: Boolean, default: false },
-  reducedMotion: { type: Boolean, default: false },
+  onHome: { type: Function, default: null },
 });
 
-const emit = defineEmits(["update:keyword", "update:typewriter"]);
+const emit = defineEmits(["update:keyword"]);
 
 function onSearch(e) {
   emit("update:keyword", e.target.value);
@@ -15,12 +14,14 @@ function onSearch(e) {
 
 <template>
   <header class="masthead">
-    <div class="seal" aria-hidden="true">晨</div>
-    <h1 class="title" id="site-title">
-      {{ meta.title }}<span class="accent">。</span>
-    </h1>
-    <p class="subtitle">{{ meta.subtitle }}</p>
-    <p class="lede">{{ meta.description }}</p>
+    <button class="cover" type="button" @click="onHome && onHome()" aria-label="返回目录">
+      <span class="seal" aria-hidden="true">晨</span>
+      <h1 class="title" id="site-title">
+        {{ meta.title }}<span class="accent">。</span>
+      </h1>
+      <p class="subtitle">{{ meta.subtitle }}</p>
+      <p class="lede">{{ meta.description }}</p>
+    </button>
 
     <div class="search-box" role="search">
       <label class="sr-only" for="search">检索语录</label>
@@ -28,7 +29,7 @@ function onSearch(e) {
         id="search"
         type="search"
         :value="keyword"
-        placeholder="检索语录关键词…"
+        placeholder="检索语录 · 分类 · 标签…"
         autocomplete="off"
         @input="onSearch"
       />
@@ -38,6 +39,16 @@ function onSearch(e) {
 </template>
 
 <style scoped>
+.cover {
+  display: block;
+  width: 100%;
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  text-align: center;
+}
 .sr-only {
   position: absolute;
   width: 1px;

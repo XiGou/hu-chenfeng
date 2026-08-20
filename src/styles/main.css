@@ -180,31 +180,8 @@ body::after {
 }
 
 /* ==========================================================================
-   Toolbar · 工具行
+   Toolbar · 工具行（通用）
    ========================================================================== */
-.toolbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  margin: 1.5rem 0 1.8rem;
-  padding-bottom: 1.1rem;
-  border-bottom: 1px dashed var(--line);
-}
-
-.count {
-  font-size: 0.92rem;
-  color: var(--ink-soft);
-  letter-spacing: 0.04em;
-}
-
-.count .num {
-  color: var(--vermillion);
-  font-weight: 700;
-  font-family: var(--font-kai);
-  font-size: 1.15rem;
-}
-
 .ghost-btn {
   font-family: var(--font-song);
   font-size: 0.88rem;
@@ -221,159 +198,6 @@ body::after {
   color: var(--vermillion);
   border-color: var(--vermillion);
   background: rgba(166, 48, 38, 0.06);
-}
-
-/* ==========================================================================
-   Quote Cards · 语录卡片
-   ========================================================================== */
-.quotes {
-  display: flex;
-  flex-direction: column;
-  gap: 1.6rem;
-}
-
-.quote-card {
-  position: relative;
-  background: rgba(255, 255, 255, 0.42);
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  padding: 1.7rem 1.8rem 1.6rem;
-  box-shadow: var(--shadow-card);
-  animation: card-in 0.55s var(--ease) both;
-  transition: transform 0.3s var(--ease), box-shadow 0.3s var(--ease);
-  backdrop-filter: blur(2px);
-}
-
-.quote-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 2px 4px rgba(43, 38, 32, 0.06),
-              0 18px 36px rgba(43, 38, 32, 0.09);
-}
-
-@keyframes card-in {
-  from { opacity: 0; transform: translateY(14px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-
-/* 左上角编号 */
-.quote-no {
-  position: absolute;
-  top: -0.9rem;
-  left: 1.2rem;
-  font-family: var(--font-kai);
-  font-size: 0.95rem;
-  color: var(--vermillion);
-  background: var(--paper);
-  padding: 0.1rem 0.6rem;
-  border: 1px solid rgba(166, 48, 38, 0.35);
-  border-radius: 999px;
-  letter-spacing: 0.06em;
-}
-
-.quote-meta {
-  display: flex;
-  align-items: center;
-  gap: 0.8rem;
-  margin-bottom: 0.9rem;
-  font-size: 0.85rem;
-  color: var(--ink-soft);
-}
-
-.cat {
-  display: inline-block;
-  font-size: 0.78rem;
-  padding: 0.15rem 0.65rem;
-  border-radius: 999px;
-  background: var(--ink);
-  color: var(--paper);
-  letter-spacing: 0.1em;
-}
-
-time { opacity: 0.75; }
-
-.quote-text {
-  font-family: var(--font-song);
-  font-size: 1.08rem;
-  line-height: 1.95;
-  color: var(--ink);
-  border-left: 3px solid var(--vermillion);
-  padding-left: 1.1rem;
-  margin: 0 0 1rem;
-}
-
-.tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.4rem;
-  margin-bottom: 0.2rem;
-}
-
-.tag {
-  font-size: 0.78rem;
-  color: var(--ink-soft);
-  background: rgba(43, 38, 32, 0.05);
-  padding: 0.15rem 0.6rem;
-  border-radius: 999px;
-}
-
-/* ---------- 多媒体 ---------- */
-.media {
-  display: flex;
-  flex-direction: column;
-  gap: 0.7rem;
-  margin-top: 1rem;
-}
-
-.media audio {
-  width: 100%;
-  height: 40px;
-}
-
-.media-video-wrap {
-  position: relative;
-  overflow: hidden;
-  border-radius: 10px;
-  aspect-ratio: 16 / 9;
-  background: #1a1713;
-  border: 1px solid var(--line);
-}
-
-.media-video-wrap iframe {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  border: 0;
-}
-
-.media-links {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.6rem;
-}
-
-.media-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  font-size: 0.86rem;
-  color: var(--ink);
-  text-decoration: none;
-  padding: 0.35rem 0.85rem;
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  transition: all 0.25s var(--ease);
-}
-
-.media-link:hover {
-  color: var(--vermillion);
-  border-color: var(--vermillion);
-  background: rgba(166, 48, 38, 0.05);
-}
-
-.media-link .ext {
-  font-size: 0.72rem;
-  color: var(--vermillion);
 }
 
 /* ==========================================================================
@@ -409,7 +233,7 @@ time { opacity: 0.75; }
   transform: rotate(-3deg);
 }
 
-/* ---------- 打字机动画 ---------- */
+/* ---------- 打字机动画（书封标题用） ---------- */
 .typewriter .title::after {
   content: "▍";
   color: var(--vermillion);
@@ -425,12 +249,9 @@ time { opacity: 0.75; }
 @media (max-width: 560px) {
   #app { padding: 0 16px 3rem; }
   .masthead { padding-top: 3rem; }
-  .quote-card { padding: 1.4rem 1.2rem 1.3rem; }
-  .quote-text { font-size: 1rem; }
 }
 
 /* ---------- 减少动效偏好 ---------- */
 @media (prefers-reduced-motion: reduce) {
   * { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
-  .quote-card:hover { transform: none; }
 }
