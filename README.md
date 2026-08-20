@@ -12,20 +12,38 @@
 
 ## 🚀 部署
 
-### GitHub Pages
+### CNB 直接部署（当前默认）
+
+通过根目录 `.cnb.yml` 流水线，push 到 `main` 分支即自动构建校验并部署：
+
+- **构建校验**：校验站点必需文件齐全、`quotes.json` 数据合法、`main.js` 语法正确。
+- **公网部署**：将静态站点同步到腾讯云 COS 对象存储（配合静态网站托管对外访问）。
+  需在 CNB 流水线环境变量 / 密钥仓库中配置：
+  `COS_SECRET_ID`、`COS_SECRET_KEY`、`COS_BUCKET`、`COS_REGION`（可选，默认 `ap-guangzhou`）。
+  未配置 COS 凭证时，流水线仅执行构建校验，部署步骤自动跳过。
+
+### GitHub Actions（后期迁移到 GitHub Pages）
+
+仓库已内置 `.github/workflows/deploy.yml`，迁移到 GitHub 后即可一键发布到 Pages：
 
 1. 把仓库推送到 GitHub
-2. 仓库 `Settings → Pages` 选择部署分支（如 `main`）的根目录
-3. 访问 `https://<username>.github.io/<repo>/`
+2. 仓库 `Settings → Pages → Build and deployment → Source` 选择 **GitHub Actions**
+3. push 到 `main`（或手动触发）后访问 `https://<username>.github.io/<repo>/`
 
-### 本地预览
+### 本地 / CNB 开发环境预览
 
 ```bash
-# 任选一个静态服务器
+# 方式一：直接跑静态服务器（任选其一）
 python3 -m http.server 8000
 # 或
 npx serve .
+
+# 方式二：使用仓库内置脚本
+./scripts/serve.sh 8000
 ```
+
+> 在 CNB 云原生开发环境中运行 `./scripts/serve.sh` 后，可通过 WebIDE「端口」面板的
+> 端口映射 URL（`https://xxx-{{port}}.cnb.run`）直接访问站点。
 
 ## 📝 如何新增一条语录
 

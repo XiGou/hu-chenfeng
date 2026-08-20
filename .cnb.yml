@@ -1,0 +1,63 @@
+# ==========================================================================
+# .cnb.yml — CNB 云原生构建流水线
+#
+# 用于在 CNB 平台"直接部署"户晨风语录静态站点。
+# 站点为纯静态、零依赖（原生 HTML/CSS/JS），无需编译，本流水线负责：
+#   1. 构建校验 —— 校验站点必需文件齐全、数据合法、脚本语法正确
+#   2. 公网部署 —— 通过腾讯云 COS 对象存储 + 静态网站托管对外提供服务
+#
+# 【COS 部署说明】
+#   部署到 COS 需要配置以下环境变量（可在 CNB「仓库设置 → 流水线环境变量」
+#   或「个人环境变量」中设置，或通过密钥仓库 imports 导入）：
+#     COS_SECRET_ID  腾讯云 API 密钥 ID
+#     COS_SECRET_KEY 腾讯云 API 密钥 Key
+#     COS_BUCKET     存储桶，格式如 `bucket-appid.cos.ap-guangzhou.myqcloud.com`
+#     COS_REGION     地域，如 `ap-guangzhou`
+#   未配置 COS 凭证时，流水线仅执行「构建校验」，部署步骤自动跳过。
+#
+#   更多静态托管方案见 README「部署」章节。
+# ==========================================================================
+
+main:
+  push:
+    - name: 部署静态站点
+      lock:
+        key: deploy-static-site
+        wait: true
+        cancel-in-wait: true
+      stages:
+        # ---- 构建校验 ----
+        - name: 校验静态站点
+          script: |
+            set -e
+            echo "==> 校验站点必需文件"
+            for f in index.html 404.html README.md \
+                     assets/css/style.css assets/js/main.js assets/data/quotes.json; do
+              [ -f "$f" ] || { echo "缺少必需文件: $f"; exit 1; }
+            done
+
+            echo "==> 校验 quotes.json 数据合法性"
+            python3 -c "import json,sys; d=json.load(open('assets/data/quotes.json')); assert 'quotes' in d; print('quotes.json OK, 共', len(d['quotes']), '条语录')"
+
+            echo "==> 校验 main.js 语法"
+            node --check assets/js/main.js && echo "main.js OK"
+
+            echo "==> 静态站点构建校验通过 ✔"
+
+        # ---- 公网部署到对象存储（COS），未配置凭证则跳过 ----
+        - name: 部署到对象存储
+          if: '[ -n "$COS_SECRET_ID" ] && [ -n "$COS_SECRET_KEY" ] && [ -n "$COS_BUCKET" ]'
+          script: |
+            set -e
+            echo "==> 安装 coscmd"
+            pip install -q coscmd
+
+            echo "==> 配置 coscmd"
+            coscmd config -a "$COS_SECRET_ID" -s "$COS_SECRET_KEY" \
+                          -b "$COS_BUCKET" -r "${COS_REGION:-ap-guangzhou}"
+
+            echo "==> 上传静态站点（递归同步，删除远端多余文件）"
+            coscmd upload -rs ./ / --delete --yes
+
+            echo "==> 站点已部署。若已开启 COS 静态网站托管，可访问："
+            echo "    https://${COS_BUCKET}/index.html"
