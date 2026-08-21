@@ -49,6 +49,14 @@ npm run preview  # 预览构建产物
   需配置 `COS_SECRET_ID`、`COS_SECRET_KEY`、`COS_BUCKET`、`COS_REGION`（可选，默认 `ap-guangzhou`）。
   未配置 COS 凭证时仅执行构建，部署自动跳过。
 
+> **路径兼容**：构建产物中的资源（JS / CSS / 音频 / BGM）均使用**相对路径**引用
+> （`vite.config.js` 中 `base: "./"`），因此 `dist/` 可部署到任意位置，无需修改代码：
+> - GitHub Pages 项目站点（`/hu-chenfeng/` 子路径）
+> - Cloudflare Pages（根域名或任意子路径）
+> - 对象存储 / 本地静态托管
+>
+> 只要将 `dist/` 目录整体上传到静态托管服务的根即可正常访问。
+
 ## 📝 如何新增一条摘录
 
 编辑 `src/data/essence.js`，在 `essence` 数组中追加一条：
