@@ -22,25 +22,6 @@ function fmtDate(d) {
       </span>
     </div>
 
-    <div class="search-box">
-      <span class="search-icon" aria-hidden="true">⌕</span>
-      <input
-        class="search-input"
-        type="search"
-        :value="keyword"
-        placeholder="搜索语录、主题或日期…"
-        aria-label="搜索语录"
-        @input="emit('update:keyword', $event.target.value)"
-      />
-      <button
-        v-if="keyword"
-        class="search-clear"
-        type="button"
-        aria-label="清空搜索"
-        @click="emit('update:keyword', '')"
-      >✕</button>
-    </div>
-
     <p v-if="keyword && items.length === 0" class="search-empty">
       未找到与“{{ keyword }}”匹配的语录
     </p>

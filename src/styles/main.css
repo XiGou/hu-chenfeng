@@ -290,6 +290,216 @@ a { color: inherit; }
 .entry .source a { color: var(--fg-soft); text-decoration: none; }
 .entry .source a:hover { color: var(--fg); text-decoration: underline; }
 
+/* ---------- 栏目导航 ---------- */
+.section-nav {
+  display: flex;
+  gap: 0.4rem;
+  margin: -1.5rem 0 2.5rem;
+  padding-bottom: 1.4rem;
+  border-bottom: 1px solid var(--line);
+}
+.section-nav button {
+  background: none;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 0.4rem 1.1rem;
+  font-family: inherit;
+  font-size: 0.9rem;
+  color: var(--fg-soft);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.section-nav button:hover { color: var(--fg); border-color: var(--fg-faint); }
+.section-nav button.active {
+  color: #fff;
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+/* ---------- 观点 ---------- */
+.vp-note {
+  font-size: 0.88rem;
+  color: var(--fg-soft);
+  margin: 0 0 2rem;
+  padding: 0.9rem 1.1rem;
+  border-left: 2px solid var(--line);
+}
+.vp-sec {
+  padding: 1.6rem 0 2.2rem;
+  border-bottom: 1px solid var(--line);
+}
+.vp-sec:last-child { border-bottom: none; }
+.vp-sec-title {
+  font-family: var(--font-serif);
+  font-weight: 600;
+  font-size: 1.35rem;
+  line-height: 1.5;
+  display: flex;
+  align-items: baseline;
+  gap: 0.7rem;
+  margin-bottom: 0.6rem;
+}
+.vp-no {
+  font-family: var(--font-sans);
+  font-size: 0.78rem;
+  font-weight: 400;
+  color: var(--fg-faint);
+  letter-spacing: 0.1em;
+}
+.vp-intro {
+  font-size: 0.95rem;
+  color: var(--fg-soft);
+  margin-bottom: 1.4rem;
+}
+.vp-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+}
+.vp-item {
+  padding: 1.1rem 0 1.3rem;
+  border-bottom: 1px dashed var(--line);
+}
+.vp-item:last-child { border-bottom: none; }
+.vp-item-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--fg);
+  margin-bottom: 0.7rem;
+}
+.vp-quote {
+  font-family: var(--font-serif);
+  font-size: 1.05rem;
+  line-height: 1.9;
+  color: var(--fg);
+  white-space: pre-line;
+}
+.vp-source {
+  margin-top: 0.6rem;
+  font-size: 0.8rem;
+  color: var(--fg-faint);
+}
+
+/* ---------- 语录 ---------- */
+.quo-grid {
+  list-style: none;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+.quo-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 1.4rem 1.5rem;
+  cursor: pointer;
+  font-family: inherit;
+  transition: border-color 0.2s ease;
+}
+.quo-card:hover { border-color: var(--fg-faint); }
+.quo-card-no {
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
+  color: var(--fg-faint);
+}
+.quo-card-tag {
+  font-size: 0.75rem;
+  color: var(--fg);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  align-self: flex-start;
+  padding: 0.05rem 0.6rem;
+}
+.quo-card-title {
+  font-family: var(--font-serif);
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--fg);
+}
+.quo-card-intro {
+  font-size: 0.92rem;
+  color: var(--fg-soft);
+  line-height: 1.7;
+}
+.quo-card-more {
+  margin-top: 0.3rem;
+  font-size: 0.82rem;
+  color: var(--fg-faint);
+}
+.quo-card:hover .quo-card-more { color: var(--fg); }
+
+.quo-article {
+  padding: 1.5rem 0 2.5rem;
+}
+.quo-head {
+  padding-bottom: 1.8rem;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 1.8rem;
+}
+.quo-tag {
+  display: inline-block;
+  font-size: 0.8rem;
+  color: var(--fg);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 0.1rem 0.7rem;
+  margin-bottom: 0.9rem;
+}
+.quo-title {
+  font-family: var(--font-serif);
+  font-size: 1.9rem;
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--fg);
+  margin-bottom: 0.9rem;
+}
+.quo-intro {
+  font-size: 1rem;
+  color: var(--fg-soft);
+  line-height: 1.8;
+}
+.quo-sec {
+  margin-bottom: 1.8rem;
+}
+.quo-sec-head {
+  font-family: var(--font-serif);
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: var(--fg);
+  margin: 0 0 1rem;
+  padding-left: 0.8rem;
+  border-left: 2px solid var(--fg);
+}
+.quo-fig {
+  margin: 0 0 1.4rem;
+}
+.quo-quote {
+  font-family: var(--font-serif);
+  font-size: 1.15rem;
+  line-height: 1.9;
+  color: var(--fg);
+  white-space: pre-line;
+  margin-bottom: 0.5rem;
+}
+.quo-source {
+  font-size: 0.8rem;
+  color: var(--fg-faint);
+}
+.quo-summary {
+  margin-top: 2.2rem;
+  padding: 1.2rem 1.4rem;
+  font-size: 0.95rem;
+  color: var(--fg-soft);
+  line-height: 1.9;
+  background: #fafafa;
+  border-radius: 8px;
+}
+
 /* ---------- 页脚 ---------- */
 .site-foot {
   margin-top: 5rem;
