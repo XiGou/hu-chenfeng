@@ -80,7 +80,11 @@ npm run preview  # 预览构建产物
 ```
 ├── index.html                  # Vite 入口 HTML
 ├── vite.config.js              # Vite 配置
-├── reference/hu-chenfeng       # HuChenFeng 全集 submodule
+├── reference/                  # 参考资源库（不参与网页展示）
+│   ├── HuChenFeng-main.zip     # 户晨风全集文字稿压缩包（不解包读取）
+│   ├── lib/                    # JS 读取 API（readFile/readLine/全文迭代器）
+│   ├── viewpoints.md           # AI 分析的重要观点列表
+│   └── quotations/             # 户晨风语录小文章
 ├── src/
 │   ├── main.js                 # Vue 应用入口
 │   ├── App.vue                 # 根组件（列表 / 详情视图切换）
@@ -96,3 +100,18 @@ npm run preview  # 预览构建产物
 ├── .cnb.yml                    # CNB 构建部署流水线
 └── .github/workflows/          # GitHub Actions 部署
 ```
+
+## 📚 参考资源库（reference/，不在网页展示）
+
+`reference/` 目录用于存放户晨风直播文字稿的**参考资源**，仅供离线检索、分析与
+研究，**不被任何页面组件引用，因此不会展示在网页上**。
+
+- **`HuChenFeng-main.zip`**：户晨风全集（2023–2025，500+ 篇文字稿）压缩包。
+  以 zip 归档保存，**不解包**；通过 `reference/lib/reader.js` 按需读取其中
+  某个文件、某一行，并提供全文迭代器。
+- **`lib/`**：JS 读取模块（`zip-reader.js` 底层解析 + `reader.js` 高层 API）。
+  运行示例：`node reference/scripts/demo.js`。
+- **`viewpoints.md`**：AI 通读全集后归纳的重要观点列表。
+- **`quotations/`**：按主题整理的户晨风语录小文章（忠于原文，保留其语言特点）。
+
+详见 [`reference/README.md`](reference/README.md)。
