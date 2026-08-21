@@ -4,9 +4,12 @@ import vue from "@vitejs/plugin-vue";
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  // GitHub Pages 项目站点部署在子路径 /hu-chenfeng/ 下
-  // 设置 base 确保构建产物中的资源引用都带上该前缀
-  base: "/hu-chenfeng/",
+  // 使用相对路径引用资源，兼容任意部署位置：
+  //  - GitHub Pages 项目站点（/hu-chenfeng/ 子路径）
+  //  - Cloudflare Pages（根域名或任意子路径）
+  //  - 本地静态托管 / 对象存储
+  // 相对路径（"./"）让 index.html 内的资源引用无需域名前缀即可正确加载
+  base: "./",
   plugins: [vue()],
   resolve: {
     alias: {
