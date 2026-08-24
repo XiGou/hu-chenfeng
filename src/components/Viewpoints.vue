@@ -35,7 +35,7 @@ function fmtSource(s) {
     </div>
 
     <p class="vp-note">
-      由 AI 通读《HuChenFeng 直播文字稿全集》（2023–2025，524 篇）后，在忠于原文的基础上归纳出的一组核心观点，每条均可追溯原文出处。
+      总结性的一栏，简要说明户晨风的主要立场。由 AI 通读《HuChenFeng 直播文字稿全集》（2023–2025，524 篇）后归纳而成，忠于原文、每条可追溯出处——若比之古籍，犹《史记·户子列传》，为其人立传。
     </p>
 
     <p v-if="keyword && filtered.length === 0" class="search-empty">

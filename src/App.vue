@@ -6,6 +6,7 @@ import Entry from "./components/Entry.vue";
 import Viewpoints from "./components/Viewpoints.vue";
 import Quotes from "./components/Quotes.vue";
 import BgmPlayer from "./components/BgmPlayer.vue";
+import About from "./components/About.vue";
 import { meta, essence } from "./data/essence.js";
 
 // section: 'read' 选读 / 'viewpoints' 观点 / 'quotations' 语录
@@ -130,10 +131,13 @@ function goList() {
 
   <footer class="site-foot">
     <span>户晨风 · 摘录</span>
-    <a
-      href="https://github.com/Olcmyk/HuChenFeng"
-      target="_blank"
-      rel="noopener noreferrer"
-    >HuChenFeng 全集 ↗</a>
+    <span class="foot-right">
+      <About />
+      <a
+        href="https://github.com/Olcmyk/HuChenFeng"
+        target="_blank"
+        rel="noopener noreferrer"
+      >HuChenFeng 全集 ↗</a>
+    </span>
   </footer>
 </template>
