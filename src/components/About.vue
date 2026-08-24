@@ -75,20 +75,29 @@ function toggle() {
 </template>
 
 <style scoped>
-/* ---------- 低调的入口 ---------- */
+/* ---------- 右上角入口 ---------- */
 .about-link {
-  background: none;
-  border: none;
+  position: fixed;
+  top: 18px;
+  right: 24px;
+  z-index: 900;
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid var(--line);
+  border-radius: 999px;
   cursor: pointer;
   font-family: inherit;
   font-size: 0.82rem;
-  color: var(--fg-faint);
-  text-decoration: underline;
-  text-underline-offset: 3px;
-  padding: 0;
-  transition: color 0.2s ease;
+  color: var(--fg-soft);
+  padding: 0.28rem 0.85rem;
+  text-decoration: none;
+  backdrop-filter: blur(4px);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+  transition: color 0.2s ease, border-color 0.2s ease;
 }
-.about-link:hover { color: var(--fg); }
+.about-link:hover {
+  color: var(--fg);
+  border-color: var(--fg-faint);
+}
 
 /* ---------- 遮罩 ---------- */
 .about-mask {
@@ -207,6 +216,12 @@ function toggle() {
 .about-enter-from, .about-leave-to { opacity: 0; }
 
 @media (max-width: 520px) {
+  .about-link {
+    top: 14px;
+    right: 16px;
+    font-size: 0.78rem;
+    padding: 0.22rem 0.7rem;
+  }
   .about-panel { padding: 1.4rem 1.2rem; }
 }
 </style>

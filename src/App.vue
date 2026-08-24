@@ -59,6 +59,8 @@ function goList() {
 <template>
   <Masthead :meta="meta" />
 
+  <About />
+
   <nav class="section-nav" aria-label="内容栏目">
     <button
       type="button"
@@ -131,13 +133,10 @@ function goList() {
 
   <footer class="site-foot">
     <span>户晨风 · 摘录</span>
-    <span class="foot-right">
-      <About />
-      <a
-        href="https://github.com/Olcmyk/HuChenFeng"
-        target="_blank"
-        rel="noopener noreferrer"
-      >HuChenFeng 全集 ↗</a>
-    </span>
+    <a
+      href="https://github.com/Olcmyk/HuChenFeng"
+      target="_blank"
+      rel="noopener noreferrer"
+    >HuChenFeng 全集 ↗</a>
   </footer>
 </template>
