@@ -10,7 +10,7 @@ export const meta = {
   title: "户晨风 · 摘录",
   subtitle: "Selected fragments · 精华选读",
   description:
-    "从 2023–2025 年的直播文字稿中挑选的只言片语，供安静阅读。另有「观点」与「语录」两个栏目。",
+    "从 2023–2025 年的直播文字稿中挑选的只言片语，供安静阅读。另有「观点」（立场之传）与「语录」（言论之辑）两个栏目。",
 };
 
 // source 指向 submodule 内相对路径；date 用于展示

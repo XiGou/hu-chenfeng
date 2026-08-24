@@ -22,6 +22,10 @@ function fmtDate(d) {
       </span>
     </div>
 
+    <p class="vp-note">
+      收集各种二创与传播度广的音频、文字与视频，可配上 BGM 当作 podcast 来听——若比之古籍，犹《诗经》之风雅颂，听寻常人讲寻常事。
+    </p>
+
     <p v-if="keyword && items.length === 0" class="search-empty">
       未找到与“{{ keyword }}”匹配的语录
     </p>
