@@ -11,6 +11,7 @@
   - **选读**：从全集文字稿中摘取的精华片段，安静阅读
   - **观点**：AI 通读全集后归纳的重要观点（源自 `reference/viewpoints.md`）
   - **语录**：按主题整理的语录小文章（源自 `reference/quotations/`）
+  - **展厅**：收集户晨风先生常见的图像资料及其介绍，点击后可查看大图
 - **实时检索**：搜索框可按关键词 / 主题 / 日期实时过滤当前栏目
 - **多媒体可选**：每条摘录可独立附带音频、视频、外链
 - **追溯出处**：每条摘录标注原始出处，可一键跳转到 HuChenFeng 全集对应章节
@@ -102,6 +103,7 @@ npm run preview  # 预览构建产物
 │   ├── data/essence.js         # 精华摘录数据（含 meta）
 │   ├── data/viewpoints.js      # 观点栏目数据（源自 reference/viewpoints.md）
 │   ├── data/quotes.js          # 语录栏目数据（源自 reference/quotations/）
+│   ├── data/gallery.js         # 展厅栏目数据（图像资源及介绍）
 │   ├── data/bgm.js             # 悬浮播放器的 BGM 曲目配置
 │   ├── styles/main.css         # 极简全局样式
 │   └── components/
@@ -110,6 +112,7 @@ npm run preview  # 预览构建产物
 │       ├── Entry.vue           # 选读：详情（文本 + 多媒体 + 出处）
 │       ├── Viewpoints.vue      # 观点栏目（重要观点列表）
 │       ├── Quotes.vue          # 语录栏目（语录小文章）
+│       ├── Gallery.vue         # 展厅栏目（图像资料 + 大图灯箱）
 │       └── BgmPlayer.vue       # 悬浮迷你 BGM 音乐播放器
 ├── public/404.html             # 404 页面
 ├── .cnb.yml                    # CNB 构建部署流水线

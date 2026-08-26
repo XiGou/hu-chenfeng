@@ -5,11 +5,12 @@ import Toc from "./components/Toc.vue";
 import Entry from "./components/Entry.vue";
 import Viewpoints from "./components/Viewpoints.vue";
 import Quotes from "./components/Quotes.vue";
+import Gallery from "./components/Gallery.vue";
 import BgmPlayer from "./components/BgmPlayer.vue";
 import About from "./components/About.vue";
 import { meta, essence } from "./data/essence.js";
 
-// section: 'read' 选读 / 'viewpoints' 观点 / 'quotations' 语录
+// section: 'read' 选读 / 'viewpoints' 观点 / 'quotations' 语录 / 'gallery' 展厅
 const section = ref("read");
 // view: 'list' 列表 / 'entry' 详情（仅选读与语录使用）
 const view = ref("list");
@@ -77,6 +78,11 @@ function goList() {
       :class="{ active: section === 'quotations' }"
       @click="switchSection('quotations')"
     >语录</button>
+    <button
+      type="button"
+      :class="{ active: section === 'gallery' }"
+      @click="switchSection('gallery')"
+    >展厅</button>
   </nav>
 
   <main>
@@ -87,7 +93,7 @@ function goList() {
         class="search-input"
         type="search"
         v-model="keyword"
-        :placeholder="section === 'viewpoints' ? '搜索观点、主题…' : (section === 'quotations' ? '搜索语录、主题…' : '搜索语录、主题或日期…')"
+        :placeholder="section === 'viewpoints' ? '搜索观点、主题…' : (section === 'quotations' ? '搜索语录、主题…' : (section === 'gallery' ? '搜索图像、标题…' : '搜索语录、主题或日期…'))"
         aria-label="搜索内容"
       />
       <button
@@ -125,6 +131,12 @@ function goList() {
     <!-- 语录：语录小文章 -->
     <Quotes
       v-else-if="section === 'quotations'"
+      :keyword="keyword"
+    />
+
+    <!-- 展厅：图像资料 -->
+    <Gallery
+      v-else-if="section === 'gallery'"
       :keyword="keyword"
     />
   </main>
