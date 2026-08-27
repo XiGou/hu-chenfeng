@@ -142,4 +142,10 @@ export const gallery = [
     title: "祝福动作 · 风格九",
     desc: "户晨风先生在各种绘画风格下的标志性祝福动作。",
   },
+  {
+    id: 23,
+    image: `${base}gallery/img23.png`,
+    title: "祝福动作 · 风格十",
+    desc: "户晨风先生在各种绘画风格下的标志性祝福动作。",
+  },
 ];
