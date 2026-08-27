@@ -16,6 +16,30 @@ const filtered = computed(() => {
   );
 });
 
+function renderMd(t) {
+  if (!t) return "";
+  const lines = String(t).split("\n").map((s) => s.trim());
+  const out = [];
+  let ul = [];
+  const flushUl = () => {
+    if (ul.length) {
+      out.push("<ul><li>" + ul.join("</li><li>") + "</li></ul>");
+      ul = [];
+    }
+  };
+  for (const l of lines) {
+    if (!l) continue;
+    if (l.startsWith("- ")) {
+      ul.push(l.replace(/^- /, ""));
+    } else {
+      flushUl();
+      out.push("<p>" + l + "</p>");
+    }
+  }
+  flushUl();
+  return out.join("");
+}
+
 function open(id) {
   active.value = filtered.value.find((g) => g.id === id) || null;
 }
@@ -48,7 +72,7 @@ function close() {
           <span class="gal-body">
             <span class="gal-no">{{ String(g.id).padStart(2, "0") }}</span>
             <span class="gal-title">{{ g.title }}</span>
-            <span class="gal-desc">{{ g.desc }}</span>
+            <span class="gal-desc" v-html="renderMd(g.desc)"></span>
             <span class="gal-more">查看大图 →</span>
           </span>
         </button>
@@ -66,7 +90,7 @@ function close() {
           <figure class="gal-view">
             <img :src="active.image" :alt="active.title" />
           </figure>
-          <figcaption class="gal-caption">{{ active.desc }}</figcaption>
+          <figcaption class="gal-caption" v-html="renderMd(active.desc)"></figcaption>
         </div>
       </div>
     </transition>
@@ -141,6 +165,10 @@ function close() {
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
+.gal-desc :deep(p), .gal-caption :deep(p) { margin: 0 0 0.45rem; }
+.gal-desc :deep(p:last-child), .gal-caption :deep(p:last-child) { margin-bottom: 0; }
+.gal-desc :deep(ul), .gal-caption :deep(ul) { margin: 0; padding-left: 1.1rem; }
+.gal-desc :deep(strong), .gal-caption :deep(strong) { color: var(--fg); font-weight: 600; }
 .gal-more {
   margin-top: 0.4rem;
   font-size: 0.82rem;
