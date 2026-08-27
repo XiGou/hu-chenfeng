@@ -23,7 +23,7 @@ function renderMd(t) {
   let ul = [];
   const flushUl = () => {
     if (ul.length) {
-      out.push("<ul><li>" + ul.join("</li><li>") + "</li></ul>");
+      out.push("<ul><li>" + ul.map(renderInline).join("</li><li>") + "</li></ul>");
       ul = [];
     }
   };
@@ -33,11 +33,18 @@ function renderMd(t) {
       ul.push(l.replace(/^- /, ""));
     } else {
       flushUl();
-      out.push("<p>" + l + "</p>");
+      out.push("<p>" + renderInline(l) + "</p>");
     }
   }
   flushUl();
   return out.join("");
+}
+
+function renderInline(t) {
+  if (!t) return "";
+  return String(t)
+    .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
+    .replace(/\*([^*]+)\*/g, "<em>$1</em>");
 }
 
 function open(id) {
