@@ -43,7 +43,7 @@ function close() {
       <li v-for="g in filtered" :key="g.id" class="gal-item">
         <button class="gal-card" type="button" @click="open(g.id)">
           <span class="gal-thumb">
-            <img :src="g.image" :alt="g.title" loading="lazy" />
+            <img :src="g.thumb" :alt="g.title" loading="lazy" />
           </span>
           <span class="gal-body">
             <span class="gal-no">{{ String(g.id).padStart(2, "0") }}</span>
