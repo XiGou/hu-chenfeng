@@ -1,3 +1,5 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <path fill="#000000" d="M32 4l26 10v2H6v-2L32 4zM6 18h52v2H6v-2zM10 22h44v34a4 4 0 0 1-4 4H14a4 4 0 0 1-4-4V22zM32 30c-4 0-6 3-6 8s2 8 6 8 6-3 6-8-2-8-6-8z"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="#E82127">
+  <!-- Tesla "T" logo -->
+  <!-- Crossbar spans full width, stem is at ~1/3 from left -->
+  <path d="M4 14h56v12H34v38h-10V26H4z"/>
 </svg>

@@ -1,5 +1,13 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <circle cx="32" cy="32" r="30" fill="#0054a6"/>
-  <text x="32" y="34" font-family="Arial, sans-serif" font-size="13" font-weight="bold" fill="#ffffff" text-anchor="middle" dominant-baseline="middle">SAMS</text>
-  <text x="32" y="49" font-family="Arial, sans-serif" font-size="9" fill="#ffffff" text-anchor="middle">CLUB</text>
+  <!-- Sam's Club logo -->
+  <g fill="#0054A6">
+    <!-- "Sam's" in serif italic -->
+    <text x="2" y="28" font-family="Georgia, 'Times New Roman', serif" font-size="16" font-weight="bold" font-style="italic">Sam</text>
+    <!-- Sparkle (star) replacing apostrophe -->
+    <path d="M32 11l1.5-2.8l2.8-1.5l-2.8-1.5L32 2.4l-1.5 2.8l-2.8 1.5l2.8 1.5z"/>
+    <!-- "s" -->
+    <text x="35" y="28" font-family="Georgia, 'Times New Roman', serif" font-size="16" font-weight="bold" font-style="italic">s</text>
+    <!-- "CLUB" -->
+    <text x="2" y="46" font-family="Arial, Helvetica, sans-serif" font-size="11" font-weight="bold" letter-spacing="2">CLUB</text>
+  </g>
 </svg>
