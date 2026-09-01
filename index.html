@@ -6,9 +6,21 @@
     <meta name="description" content="户晨风直播文字稿精华摘录，安静阅读文本与多媒体。" />
     <meta name="theme-color" content="#ffffff" />
     <title>户晨风 · 摘录</title>
+    <link id="favicon" rel="icon" type="image/svg+xml" href="/favicons/apple.svg" />
   </head>
   <body>
     <div id="app"></div>
     <script type="module" src="./src/main.js"></script>
+    <script>
+      // 状态栏缩略图：每次刷新在苹果/特斯拉/山姆之间随机出现
+      (function () {
+        var logos = ["apple", "tesla", "sam"];
+        var pick = logos[Math.floor(Math.random() * logos.length)];
+        var link = document.getElementById("favicon");
+        if (link) {
+          link.setAttribute("href", "/favicons/" + pick + ".svg");
+        }
+      })();
+    </script>
   </body>
 </html>
