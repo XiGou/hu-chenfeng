@@ -4,7 +4,12 @@
  * 文件 `src/data/essence/<id>.md`，供 create-pull-request Action 生成 PR。
  *
  * 用法：
- *   node append-selection.mjs <issue-body-file>
+ *   node append-selection.mjs <issue-body-file> [<issue-title>]
+ *
+ * 标题（title）字段说明：
+ *   从 Issue 表单 body 的「### 标题」小节提取；若该小节为空，则回退使用 Issue
+ *   自身标题（第二参数，可选，自动剥离「选读：」前缀）。标题会写入 md front-matter，
+ *   并作为音频下载时的默认基础文件名。
  *
  * 说明：仓库 package.json 声明了 "type": "module"，本脚本采用 ESM（.mjs）。
  * 选读数据采用「每内容单文件」维护（见 src/data/essence/README.md），因此
@@ -48,6 +53,10 @@ function parseSections(raw) {
 }
 
 const sec = parseSections(body);
+// 标题：优先 body 内「### 标题」小节；为空时回退到 Issue 自身标题（剥离「选读：」前缀）
+const issueTitle = (process.argv[3] || '').trim().replace(/^选读\s*[:：]?\s*/, '').trim();
+const title = (sec['标题'] || issueTitle || '').trim();
+
 const theme = sec['主题 tag'] || '其他';
 const text = sec['正文文本'] || '';
 const source = sec['原始出处'] || '';
@@ -172,11 +181,22 @@ function maxExistingId() {
 
 const newId = maxExistingId() + 1;
 
-// 音频默认文件名：用 id 作为基础名
-const audio = await resolveAudio(audioRaw, `selection-${newId}`);
+// 音频默认基础文件名：
+//   - 有标题 → 用标题清洗后的文件名（可读、稳定）；保证非空
+//   - 无标题 → 回退用 selection-<id>
+// 清洗规则：保留中英文与数字，其余一律替换为连字符，压平多连字符并去首尾。
+function slugifyBase(s) {
+  return s
+    .replace(/[\\/:*?"<>|\s]+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 60) || '';
+}
+const audioBaseName = slugifyBase(title) || `selection-${newId}`;
+const audio = await resolveAudio(audioRaw, audioBaseName);
 
 // ================= 生成单文件 Markdown 并写入 =================
-const item = { id: newId, date: undefined, theme, text, source, audio, links };
+const item = { id: newId, title: title || undefined, date: undefined, theme, text, source, audio, links };
 const mdText = stringifyMarkdownItem(item);
 const destFile = path.join(ESSENCE_DIR, `${newId}.md`);
 

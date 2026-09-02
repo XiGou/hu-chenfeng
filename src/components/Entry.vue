@@ -58,6 +58,8 @@ onMounted(() => {
       >{{ quote.theme }}</button>
     </div>
 
+    <h2 v-if="quote.title" class="entry-title">{{ quote.title }}</h2>
+
     <blockquote>{{ quote.text }}</blockquote>
 
     <div v-if="quote.audio || quote.video || quote.links?.length" class="media">

@@ -21,7 +21,7 @@ const items = computed(() => {
   const kw = keyword.value.trim().toLowerCase();
   if (!kw) return essence;
   return essence.filter((q) => {
-    const haystack = [q.text, q.theme, q.date, q.source]
+    const haystack = [q.title, q.text, q.theme, q.date, q.source]
       .filter(Boolean)
       .join(" ")
       .toLowerCase();

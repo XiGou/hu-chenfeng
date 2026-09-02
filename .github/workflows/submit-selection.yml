@@ -48,8 +48,10 @@ jobs:
           node-version: 20
 
       - name: 解析 Issue 并新增选读单文件
+        env:
+          ISSUE_TITLE: ${{ github.event.issue.title }}
         run: |
-          node .github/workflows/scripts/append-selection.mjs /tmp/issue-body.txt
+          node .github/workflows/scripts/append-selection.mjs /tmp/issue-body.txt "$ISSUE_TITLE"
 
       - name: 校验数据模块语法
         run: |

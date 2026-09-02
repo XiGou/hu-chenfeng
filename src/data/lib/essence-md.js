@@ -6,6 +6,7 @@
 //
 //   ---
 //   id: 1
+//   title: 关于人生节奏的一段话   # 标题（可选）
 //   date: 2025-01-14
 //   theme: 节奏
 //   source: reference/hu-chenfeng/2025年01月/2025-01-14.md
@@ -30,7 +31,7 @@
 /**
  * 将单条选读的 Markdown 原始文本解析为对象。
  * @param {string} raw
- * @returns {{id?:number, date?:string, theme?:string, text:string,
+ * @returns {{id?:number, title?:string, date?:string, theme?:string, text:string,
  *            source?:string, audio?:string, video?:string, links?:object[]}}
  */
 export function parseMarkdownItem(raw) {
@@ -46,7 +47,7 @@ export function parseMarkdownItem(raw) {
     item.id = Number(meta.id);
     if (Number.isNaN(item.id)) throw new Error('id 字段必须是数字');
   }
-  for (const k of ['date', 'theme', 'source']) {
+  for (const k of ['title', 'date', 'theme', 'source']) {
     const v = meta[k];
     if (v !== undefined && v !== null && String(v).trim() !== '') {
       item[k] = String(v).trim();
@@ -73,7 +74,7 @@ export function parseMarkdownItem(raw) {
 /**
  * 将一条选读对象序列化为 Markdown 文本（含 front-matter 与正文）。
  * 供 append-selection.mjs 在新增选读时生成独立文件。
- * @param {object} item 需含 id/theme/text；date/source/audio/video/links 可选
+ * @param {object} item 需含 id/theme/text；title/date/source/audio/video/links 可选
  * @returns {string}
  */
 export function stringifyMarkdownItem(item) {
@@ -84,6 +85,7 @@ export function stringifyMarkdownItem(item) {
     }
   };
   put('id', item.id);
+  put('title', item.title);
   put('date', item.date);
   put('theme', item.theme);
   put('source', item.source);
