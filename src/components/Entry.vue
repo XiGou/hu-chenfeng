@@ -1,5 +1,7 @@
 <script setup>
-import { ref, onMounted, watch } from "vue";
+import { ref, computed, onMounted, watch } from "vue";
+import { renderMarkdown } from "../data/lib/md-render.js";
+import Waveform from "./Waveform.vue";
 
 const props = defineProps({
   quote: { type: Object, required: true },
@@ -8,6 +10,9 @@ const emit = defineEmits(["back", "search"]);
 
 const videoLoaded = ref(false);
 const videoEl = ref(null);
+
+// 正文以 Markdown 渲染，保留换行与段落格式（而非纯文本压成一块）
+const textHtml = computed(() => renderMarkdown(props.quote.text));
 
 function fmtDate(d) {
   if (!d) return "";
@@ -60,11 +65,13 @@ onMounted(() => {
 
     <h2 v-if="quote.title" class="entry-title">{{ quote.title }}</h2>
 
-    <blockquote>{{ quote.text }}</blockquote>
+    <!-- 音频置于正文之前，便于边听边读；带波形可视化 -->
+    <Waveform v-if="quote.audio" class="entry-audio" :src="quote.audio" />
 
-    <div v-if="quote.audio || quote.video || quote.links?.length" class="media">
-      <audio v-if="quote.audio" controls preload="none" :src="quote.audio"></audio>
+    <!-- 正文：Markdown 渲染，保留换行/段落/格式 -->
+    <div class="entry-text" v-html="textHtml"></div>
 
+    <div v-if="quote.video || quote.links?.length" class="media">
       <div v-if="quote.video" ref="videoEl" class="media-video-wrap">
         <iframe
           v-if="videoLoaded"
