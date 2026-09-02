@@ -76,7 +76,7 @@ jobs:
             请在审阅后合入本 PR。
 
             Ref: #${{ github.event.issue.number }}
-          labels: ["auto"]
+          labels: auto
 
       - name: 输出 PR 信息
         run: |
