@@ -10,6 +10,7 @@ front-matter + 正文」的易读格式。`src/data/essence.js` 会通过
 ```md
 ---
 id: 1                      # 必填 · 数字 id（唯一、升序）
+title: 关于人生节奏的一段话  # 可选 · 简短标题（列表/详情页突出展示；也用作音频文件名）
 date: 2025-01-14           # 可选 · 直播日期 YYYY-MM-DD
 theme: 节奏                # 可选 · 主题标签
 source: reference/hu-chenfeng/2025年01月/2025-01-14.md  # 可选 · 原始出处
@@ -24,6 +25,8 @@ links:                     # 可选 · 外链列表
 ```
 
 - **front-matter** 中的 `#` 为注释，`audio`/`video` 仅保留单行值。
+- `title` 为可选的简短标题：前端「选读」列表主要展示标题（点进去才展示完整正文），
+  无 `title` 时列表回退展示正文；提交选读时也会用标题清洗后作为音频基础文件名。
 - `audio` 一律填**相对 `public/` 的仓库内资源路径**（如 `audio/quotes/xx.mp3`）；
   构建时会自动拼接站点 `BASE_URL`。**不允许**以 `http(s)://` 外链形式保留，
   外链音频须先下载并 commit 进 `public/audio/quotes/`。

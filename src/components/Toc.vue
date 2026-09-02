@@ -11,6 +11,16 @@ function fmtDate(d) {
   const p = String(d).split("-");
   return p.length === 3 ? `${p[0]} · ${p[1]} · ${p[2]}` : d;
 }
+
+// 列表仅突出展示「标题」；无标题时回退为正文（兼容历史数据）
+// 有标题时附上正文首段的简短预览，正文完整内容点进去在详情页阅读
+function titleOf(q) {
+  return q.title || q.text;
+}
+function excerptOf(q) {
+  if (!q.title) return ""; // 无标题时正文即展示，无需再预览
+  return String(q.text || "").replace(/\s+/g, " ").slice(0, 60);
+}
 </script>
 
 <template>
@@ -41,7 +51,8 @@ function fmtDate(d) {
             <time>{{ fmtDate(q.date) }}</time>
             <span class="item-theme">{{ q.theme }}</span>
           </span>
-          <span class="item-text">{{ q.text }}</span>
+          <span class="item-title">{{ titleOf(q) }}</span>
+          <span v-if="excerptOf(q)" class="item-excerpt">{{ excerptOf(q) }}…</span>
         </button>
       </li>
     </ul>

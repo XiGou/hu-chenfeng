@@ -119,7 +119,7 @@ a { color: inherit; }
   cursor: pointer;
   font-family: inherit;
 }
-.item-btn:hover .item-text { color: var(--accent-hover); }
+.item-btn:hover .item-title { color: var(--accent-hover); }
 
 .item-meta {
   font-size: 0.78rem;
@@ -136,12 +136,21 @@ a { color: inherit; }
   border-radius: 999px;
   padding: 0.05rem 0.6rem;
 }
-.item-text {
+.item-text,
+.item-title {
+  display: block;
   font-family: var(--font-serif);
-  font-size: 1.1rem;
-  line-height: 1.8;
+  font-size: 1.25rem;
+  line-height: 1.6;
   color: var(--fg);
   transition: color 0.2s ease;
+}
+.item-excerpt {
+  display: block;
+  margin-top: 0.5rem;
+  font-size: 0.9rem;
+  line-height: 1.7;
+  color: var(--fg-faint);
 }
 
 /* ---------- 检索 ---------- */
@@ -239,6 +248,13 @@ a { color: inherit; }
 .entry .entry-meta .theme:hover {
   border-color: var(--fg-faint);
   text-decoration: underline;
+}
+.entry-title {
+  font-family: var(--font-serif);
+  font-size: 1.9rem;
+  line-height: 1.45;
+  color: var(--fg);
+  margin-bottom: 1.4rem;
 }
 .entry blockquote {
   font-family: var(--font-serif);

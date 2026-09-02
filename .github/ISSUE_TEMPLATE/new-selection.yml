@@ -14,7 +14,9 @@ body:
     id: title
     attributes:
       label: 标题
-      description: 本条选读的简短标题
+      description: >-
+        本条选读的简短标题，会写入生成文件的 front-matter 并作为列表/详情页的展示标题；
+        若同时上传了音频，标题还会作为音频文件的默认文件名。
       placeholder: 例如：关于人生节奏的一段话
     validations:
       required: true
