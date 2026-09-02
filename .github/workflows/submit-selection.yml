@@ -1,0 +1,85 @@
+# ==========================================================================
+# submit-selection.yml — 选读信息自动提交流程
+#
+# 用户在仓库内按「提交新选读」Issue 模板填写文本、标题、tag、日期、出处、
+# 音频路径等必要信息后提交 Issue，本工作流会自动：
+#   1. 解析 Issue body 中的各字段
+#   2. 追加一条新选读到 src/data/essence.js（id 自动递增）
+#   3. 生成一个 PR，包含以上代码变更，供人工/自动审阅后合入
+#
+# 触发条件：
+#   - 新 Issue 被创建（opened）
+#   - 且该 Issue 带有「选读」标签
+# ==========================================================================
+name: Submit Selection
+
+on:
+  issues:
+    types: [opened]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  submit-selection:
+    # 仅处理带「选读」标签的 Issue
+    if: contains(github.event.issue.labels.*.name, '选读')
+    runs-on: ubuntu-latest
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 读取 Issue 信息
+        id: issue
+        env:
+          ISSUE_TITLE: ${{ github.event.issue.title }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          ISSUE_BODY: ${{ github.event.issue.body }}
+        run: |
+          echo "$ISSUE_BODY" > /tmp/issue-body.txt
+          echo "issue_number=$ISSUE_NUMBER" >> "$GITHUB_OUTPUT"
+          echo "issue_title=$ISSUE_TITLE" >> "$GITHUB_OUTPUT"
+
+      - name: 设置 Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: 解析并追加选读数据
+        run: |
+          node .github/workflows/scripts/append-selection.cjs /tmp/issue-body.txt
+
+      - name: 校验 essence.js 语法
+        run: |
+          node --check src/data/essence.js && echo "essence.js 语法校验通过"
+
+      - name: 创建 Pull Request
+        id: cpr
+        uses: peter-evans/create-pull-request@v6
+        with:
+          commit-message: "feat: 新增选读 #${{ github.event.issue.number }}"
+          branch: "auto/selection-${{ github.event.issue.number }}"
+          delete-branch: true
+          title: "新增选读：${{ steps.issue.outputs.issue_title }}"
+          body: |
+            ## 新增选读
+
+            自动由 Issue #${{ github.event.issue.number }} 生成。
+
+            - **标题**：${{ steps.issue.outputs.issue_title }}
+            - 已将新选读追加到 `src/data/essence.js`
+
+            请在审阅后合入本 PR。
+
+            Ref: #${{ github.event.issue.number }}
+          labels: ["auto"]
+
+      - name: 输出 PR 信息
+        run: |
+          if [ -n "${{ steps.cpr.outputs.pull-request-number }}" ]; then
+            echo "已创建 PR #${{ steps.cpr.outputs.pull-request-number }}"
+            echo "PR_URL=${{ steps.cpr.outputs.pull-request-url }}"
+          else
+            echo "未创建新 PR（可能已有同名分支或无需变更）"
+          fi
