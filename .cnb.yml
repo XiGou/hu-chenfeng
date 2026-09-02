@@ -86,7 +86,20 @@ main:
             git remote remove github 2>/dev/null || true
             git remote add github "https://x-access-token:${PAT}@github.com/${GITHUB_REPO}.git"
 
-            echo "==> 推送代码到 GitHub"
-            git push github HEAD:main --force
+            echo "==> 拉取 GitHub 最新 main（若远端有更新则同步到本地）"
+            git fetch github main:refs/remotes/github/main || echo "首次拉取 GitHub 或暂无远端 main，跳过同步"
+
+            echo "==> 将本地 main 同步到 GitHub 最新"
+            if git rev-parse --verify github/main >/dev/null 2>&1; then
+              if ! git merge-base --is-ancestor github/main HEAD; then
+                echo "GitHub main 领先本地，rebase 将本地提交叠加到 GitHub 之上"
+                git rebase github/main
+              else
+                echo "本地已包含 GitHub 最新提交，无需 rebase"
+              fi
+            fi
+
+            echo "==> 推送代码到 GitHub（冲突已通过拉取 + rebase 解决，非 force）"
+            git push github HEAD:main
 
             echo "==> 代码已同步到 GitHub ✔"
