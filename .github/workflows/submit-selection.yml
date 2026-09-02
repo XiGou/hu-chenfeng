@@ -48,7 +48,7 @@ jobs:
 
       - name: 解析并追加选读数据
         run: |
-          node .github/workflows/scripts/append-selection.cjs /tmp/issue-body.txt
+          node .github/workflows/scripts/append-selection.mjs /tmp/issue-body.txt
 
       - name: 校验 essence.js 语法
         run: |
