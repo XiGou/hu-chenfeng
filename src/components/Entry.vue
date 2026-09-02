@@ -11,6 +11,23 @@ const emit = defineEmits(["back", "search"]);
 
 const videoLoaded = ref(false);
 const videoEl = ref(null);
+const copied = ref(false);
+
+// 分享页 URL：站点/选读/<id>.html（由构建时 gen-share-pages.mjs 生成）
+// import.meta.env.BASE_URL 在 vite base="./" 时返回 "./"，此时相对当前页解析。
+const shareUrl = computed(() =>
+  new URL(
+    (import.meta.env.BASE_URL || "/") + `选读/${props.quote.id}.html`,
+    location.href
+  ).toString()
+);
+
+// 分享到 X 的 intent 链接
+const twitterShareUrl = computed(() =>
+  `https://twitter.com/intent/tweet?` +
+  `text=${encodeURIComponent((props.quote.title || `选读 #${props.quote.id}`) + " · 户晨风")}` +
+  `&url=${encodeURIComponent(shareUrl.value)}`
+);
 
 // theme 字段可含多个标签（用空格/顿号/、/ 分隔），逐一渲染为可点击胶囊
 const themes = computed(() => splitThemes(props.quote.theme));
@@ -30,10 +47,23 @@ function linkIcon(type) {
   return "↗";
 }
 
+/** 复制分享链接到剪贴板 */
+async function copyShareUrl() {
+  try {
+    await navigator.clipboard.writeText(shareUrl.value);
+    copied.value = true;
+    setTimeout(() => (copied.value = false), 2000);
+  } catch {
+    // 降级：弹窗提示
+    window.prompt("复制分享链接", shareUrl.value);
+  }
+}
+
 watch(
   () => props.quote.id,
   () => {
     videoLoaded.value = false;
+    copied.value = false;
   }
 );
 
@@ -103,6 +133,21 @@ onMounted(() => {
           {{ l.label || l.type }}
         </a>
       </div>
+    </div>
+
+    <!-- 分享区 -->
+    <div class="share-bar">
+      <button class="share-btn" type="button" @click="copyShareUrl">
+        <span aria-hidden="true">{{ copied ? "✓" : "↗" }}</span>
+        {{ copied ? "已复制链接" : "复制分享链接" }}
+      </button>
+      <a
+        class="share-btn share-btn-ext"
+        :href="twitterShareUrl"
+        target="_blank"
+        rel="noopener noreferrer"
+        title="分享到 X"
+      >𝕏</a>
     </div>
   </article>
 </template>
