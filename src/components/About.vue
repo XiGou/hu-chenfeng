@@ -22,7 +22,7 @@ const sections = [
     name: "语录",
     en: "Quotations",
     metaphor: "若比《论语》之「语录」",
-    body: "把直播间里那些零散却成体系的话，按主题收拢成篇，忠于原文、保留口语，并标注可追溯出处。如同孔子弟子整理夫子之语而成《论语》，这里是把户晨风的话按主题辑录成文，供人逐篇细读。",
+    body: "把直播间里那些零散却成体系的话，按主题收拢成篇，忠于原文、保留口语。如同孔子弟子整理夫子之语而成《论语》，这里是把户晨风的话按主题辑录成文，供人逐篇细读。",
   },
   {
     key: "gallery",
@@ -70,11 +70,6 @@ function toggle() {
 
         <footer class="about-foot">
           <span>户晨风 · 摘录</span>
-          <a
-            href="https://github.com/Olcmyk/HuChenFeng"
-            target="_blank"
-            rel="noopener noreferrer"
-          >HuChenFeng 全集 ↗</a>
         </footer>
       </div>
     </div>
@@ -215,9 +210,6 @@ function toggle() {
   font-size: 0.8rem;
   color: var(--fg-faint);
 }
-.about-foot a { color: var(--fg-soft); text-decoration: none; }
-.about-foot a:hover { color: var(--fg); text-decoration: underline; }
-
 /* 过渡 */
 .about-enter-active, .about-leave-active { transition: opacity 0.2s ease; }
 .about-enter-from, .about-leave-to { opacity: 0; }

@@ -31,10 +31,6 @@ const filtered = computed(() => {
       .includes(kw)
   );
 });
-
-function fmtSource(s) {
-  return s.replace(/\.md$/, "");
-}
 </script>
 
 <template>
@@ -52,7 +48,6 @@ function fmtSource(s) {
         <h3 class="quo-sec-head">{{ s.heading }}</h3>
         <figure v-for="(it, ii) in s.items" :key="ii" class="quo-fig">
           <blockquote class="quo-quote">{{ it.quote }}</blockquote>
-          <figcaption class="quo-source">—— {{ fmtSource(it.source) }}</figcaption>
         </figure>
       </section>
 
@@ -67,7 +62,7 @@ function fmtSource(s) {
     </div>
 
     <p class="vp-note">
-      体系化的言论整理。把直播间里那些零散却能成体系的话，按主题收拢成一篇篇小文章，忠于原文、保留口语与语言特点，并标注出处——若比之古籍，犹孔子弟子辑其言而成《论语》。
+      体系化的言论整理。把直播间里那些零散却能成体系的话，按主题收拢成一篇篇小文章，忠于原文、保留口语与语言特点——若比之古籍，犹孔子弟子辑其言而成《论语》。
     </p>
 
     <p v-if="keyword && filtered.length === 0" class="search-empty">
