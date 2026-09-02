@@ -1,25 +1,31 @@
 #!/usr/bin/env node
 /**
- * gen-share-pages.mjs — 为每条「选读」生成独立静态分享页
+ * gen-share-pages.mjs — 用生成器把站点里的「选读」详情静态化为独立 HTML
  *
  * 读取 src/data/essence/<id>.md（front-matter + 正文），为每条生成
  *   dist/选读/<id>.html
- * 一个独立静态 HTML，内嵌：
- *   - OG / Twitter Card meta 标签（含 og:audio / twitter:card=player）
- *   - 原生 <audio controls> 播放器
- *   - 标题、日期、主题、正文
+ * 一个可直接独立访问的静态详情页（既是站内详情，也可作为分享/被爬取的地址，
+ * 无需再单独维护一套“给 X 用的分享页”）。页面内嵌：
+ *   - OG / Twitter Card meta：og:title/description/audio，以及 og:image/twitter:image
+ *     —— 预览图从 public/gallery/ 里按选读 id 确定性随机任选一张；
+ *   - Twitter 卡片用 summary_large_image（X 无需白名单即可稳定出“大图+标题”预览，
+ *     og:audio 直链让支持音频的平台可直接点播；twitter:card=player 需 X 白名单，故不使用）
+ *   - 原生 <audio controls> 播放器 + 展厅预览图 + 标题/日期/主题/正文（含 video/links 媒体）
  *
- * 供分享到 X/Twitter 等外部平台时，预览卡片直接可点播音频。
+ * 另外会给首页 dist/index.html 补写基础 OG/Twitter meta（含一张 gallery 预览图），
+ * 使“分享站点首页”也能出预览卡片。
  *
  * 用法：
  *   node scripts/gen-share-pages.mjs                # 默认扫描 src/data/essence
  *   ESSENCE_DIR=xx node scripts/gen-share-pages.mjs # 覆盖目录
  *   OUT_DIR=xx node scripts/gen-share-pages.mjs     # 覆盖输出目录
- *   SITE_URL=https://example.com  node scripts/gen-share-pages.mjs  # 指定站点绝对地址（og:url / twitter:player 会用它）
- *   # 若不设 SITE_URL，页面会在浏览器运行时用 location.origin 自动补齐绝对地址，
- *   #   og:url / og:audio 等写成相对当前页的链接；大部分平台（含 X 爬虫）能正确解析。
+ *   SITE_URL=https://example.com  node scripts/gen-share-pages.mjs
+ *     # 指定站点绝对地址，og:url / og:image / og:audio 等直接烘成绝对 https。
+ *     # X 等平台的爬虫不执行 JS，要让预览卡片真正出图/可点播，务必在构建时配置 SITE_URL
+ *     #（.cnb.yml 会在配置 SITE_URL 或 COS_BUCKET 时自动推导）。未配置则退化为相对路径，
+ *     #   仅浏览器/支持渲染的抓取器能自动补齐。
  *
- * 无真实选读数据时脚本正常退出（打印提示），不会报错，保证构建通过。
+ * 无真实选读数据时脚本仍会给首页注入 og meta，然后正常退出，保证构建通过。
  */
 import fs from 'node:fs';
 import path from 'node:path';
@@ -190,9 +196,42 @@ function collectEssence(dir) {
   return items.sort((a, b) => a.id - b.id);
 }
 
+
+// ---------------------------------------------------------------------------
+// 展厅预览图 · gallery
+// 从 public/gallery/ 挑选一张作为该页面的 OG / Twitter 预览图（og:image）。
+// 规则：以选读 id 作「确定性种子」，在 gallery 大图中任选一张 ——
+//   · 同一 id 每次构建都稳定选到同一张（避免反复构建导致 meta 抖动、平台缓存失效）
+//   · 不同 id 落在不同位置，观感上呈随机分布
+// ---------------------------------------------------------------------------
+let _galleryCache = null;
+function getGalleryImages() {
+  if (_galleryCache) return _galleryCache;
+  const gDir = path.join(ROOT, 'public', 'gallery');
+  if (!fs.existsSync(gDir)) { _galleryCache = []; return _galleryCache; }
+  // 只取顶层大图（imgN.png），排除 thumbs/ 缩略子目录
+  const files = fs.readdirSync(gDir)
+    .filter((f) => /^img\d+\.png$/i.test(f))
+    .sort((a, b) => {
+      const na = Number(a.match(/^img(\d+)\.png$/i)[1]);
+      const nb = Number(b.match(/^img(\d+)\.png$/i)[1]);
+      return na - nb;
+    });
+  _galleryCache = files.map((f) => 'gallery/' + f); // 相对站点根的静态资源路径
+  return _galleryCache;
+}
+
+/** 由 seed 派生的确定性下标，在 [0,len) 内「伪随机」挑一个 */
+function pickGalleryIndex(seed, len) {
+  if (len <= 0) return -1;
+  // Knuth 乘法散列：相邻 id 会落到不同图，形成稳定而分散的选择
+  const h = (Math.imul(seed || 0, 2654435761) >>> 0);
+  return h % len;
+}
+
 /** 生成单条分享页 HTML 字符串 */
 function buildShareHtml(item) {
-  const { id, title = '', date = '', theme = '', source = '', audio = '', text = '' } = item;
+  const { id, title = '', date = '', theme = '', source = '', audio = '', text = '', video = '', links = [] } = item;
 
   const themes = splitThemes(theme);
   const body = renderMarkdown(text);
@@ -219,11 +258,9 @@ function buildShareHtml(item) {
     audioAbsUrl = absoluteAudioUrl(audioClean, SITE_URL, relRoot);
   }
 
-  // 页面的绝对地址（og:url / twitter:player 用）
+  // 页面的站点相对地址（og:url 用；配 SITE_URL 时烘成绝对 https）
   const pageRel = `${DIR_NAME}/${id}.html`;
   const ogUrl = SITE_URL ? `${SITE_URL}/${pageRel}` : pageRel;
-  // twitter:player 需要一个可 iframe 的页面（这里就指向当前分享页）
-  const playerUrl = SITE_URL ? `${SITE_URL}/${pageRel}` : pageRel;
   // 主题标签 HTML
   const themeHtml = themes.length
     ? themes.map((t) => `<span class="tag">${escHtml(t)}</span>`).join('')
@@ -235,6 +272,21 @@ function buildShareHtml(item) {
   // 正文（去掉最外层包裹 p 的多余行为已由 renderMarkdown 处理好）
   const contentHtml = body || '<p>（本条暂无正文。）</p>';
 
+  // 媒体区：外链视频（iframe）+ 关联链接（与站内 Entry 一致）
+  const mediaParts = [];
+  if (video) {
+    mediaParts.push(`<div class="media-video"><iframe src="${escHtml(video)}" title="${escHtml(displayTitle)}" loading="lazy" allowfullscreen allow="encrypted-media; picture-in-picture"></iframe></div>`);
+  }
+  if (Array.isArray(links) && links.length) {
+    const lis = links
+      .filter((l) => l && l.url)
+      .map((l) => `<a class="media-link" href="${escHtml(l.url)}" target="_blank" rel="noopener noreferrer"><span>${escHtml((l.type||'').slice(0,1)||'↗')}</span>${escHtml(l.label || l.type || '链接')}</a>`)
+      .join('');
+    if (lis) mediaParts.push(`<div class="media-links">${lis}</div>`);
+  }
+  const mediaHtml = mediaParts.length ? `<div class="media">${mediaParts.join('')}</div>` : '';
+
+
   // 返回链接 — 站点根 index.html，可能部署于子路径下，用相对路径
   const backHref = relRoot + '/index.html';
 
@@ -242,6 +294,22 @@ function buildShareHtml(item) {
 
   // og:type —— 有音频用 music.song，无音频用 article
   const ogType = audioAbsUrl ? 'music.song' : 'article';
+
+  // 展厅预览图（og:image）：每个页面从 gallery 里确定性随机任选一张
+  const galleryImages = getGalleryImages();
+  let imageSitePath = ''; // 相对站点根：gallery/imgN.png
+  let imageAbsUrl = '';   // og:image 需要的绝对/相对站点 URL
+  let imageRelUrl = '';   // 相对本页：../gallery/imgN.png（页面内 <img> 用）
+  if (galleryImages.length) {
+    const gi = pickGalleryIndex(id || 0, galleryImages.length);
+    imageSitePath = galleryImages[gi];
+    imageRelUrl = relRoot + '/' + imageSitePath; // 相对本页，供页面内 <img>
+    // og:image —— 配了 SITE_URL 用绝对 URL；未配则用「相对本页」路径，
+    // 使爬虫能基于真实页面 URL（站点/选读/<id>.html）解析到站点/gallery/<n>.png
+    imageAbsUrl = SITE_URL
+      ? `${SITE_URL}/${imageSitePath}`.replace(/([^:])\/+/g, '$1/')
+      : imageRelUrl;
+  }
 
   return `<!DOCTYPE html>
 <html lang="zh-CN">
@@ -263,19 +331,20 @@ function buildShareHtml(item) {
   <meta property="og:audio" content="${escHtml(audioAbsUrl)}">
   <meta property="og:audio:secure_url" content="${escHtml(audioAbsUrl)}">
   <meta property="og:audio:type" content="audio/mpeg">` : ''}
+  ${imageAbsUrl ? `
+  <meta property="og:image" content="${escHtml(imageAbsUrl)}">
+  <meta property="og:image:secure_url" content="${escHtml(imageAbsUrl)}">
+  <meta property="og:image:alt" content="${escHtml(displayTitle)}">` : ''}
 
   <!-- ======== Twitter / X Card ======== -->
-  ${audioAbsUrl ? `
-  <meta name="twitter:card" content="player">
-  <meta name="twitter:player" content="${escHtml(playerUrl)}">
-  <meta name="twitter:player:width" content="600">
-  <meta name="twitter:player:height" content="400">
+  ${imageAbsUrl ? `
+  <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="${escHtml(displayTitle)}">
-  <meta name="twitter:description" content="${escHtml(description)}">` : `
+  <meta name="twitter:description" content="${escHtml(description)}">
+  <meta name="twitter:image" content="${escHtml(imageAbsUrl)}">` : `
   <meta name="twitter:card" content="summary">
   <meta name="twitter:title" content="${escHtml(displayTitle)}">
   <meta name="twitter:description" content="${escHtml(description)}">`}
-  ${audioAbsUrl ? `<meta name="twitter:player:stream" content="${escHtml(audioAbsUrl)}">` : ''}
 
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -300,7 +369,7 @@ function buildShareHtml(item) {
       text-decoration: none;
       margin-bottom: 28px;
     }
-    .brand:hover { color: #f0502f; }
+    .brand:hover { color: #111; }
     .meta {
       display: flex;
       align-items: center;
@@ -328,6 +397,22 @@ function buildShareHtml(item) {
       color: #111;
       letter-spacing: -0.01em;
     }
+    /* 展厅预览图 */
+    .preview {
+      margin: 4px 0 24px;
+      border-radius: 12px;
+      overflow: hidden;
+      border: 1px solid #ececec;
+      background: #fafafa;
+      text-align: center;
+    }
+    .preview img {
+      display: block;
+      width: 100%;
+      height: auto;
+      max-height: 460px;
+      object-fit: contain;
+    }
     /* 音频 */
     .audio-wrap {
       margin: 20px 0 24px;
@@ -350,7 +435,7 @@ function buildShareHtml(item) {
       color: #999;
       margin-bottom: 8px;
     }
-    .audio-hint .play-icon { color: #f0502f; font-size: 14px; }
+    .audio-hint .play-icon { color: #111; font-size: 14px; }
     .audio-hint .tip { color: #888; }
 
     /* 正文 */
@@ -381,6 +466,17 @@ function buildShareHtml(item) {
       font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
       font-size: 0.92em;
     }
+    .media { margin: 24px 0 4px; }
+    .media-video { position: relative; padding-top: 56.25%; border-radius: 12px; overflow: hidden; background:#000; margin-bottom: 16px; }
+    .media-video iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+    .media-links { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 8px; }
+    .media-link {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 6px 14px; border: 1px solid #ececec; border-radius: 999px;
+      color: #333; text-decoration: none; font-size: 14px;
+    }
+    .media-link span { color: #999; }
+    .media-link:hover { border-color: #111; color: #111; }
     .source {
       margin-top: 28px;
       padding-top: 16px;
@@ -397,7 +493,7 @@ function buildShareHtml(item) {
       color: #555;
       text-decoration: none;
     }
-    .back-link:hover { color: #f0502f; }
+    .back-link:hover { color: #111; }
     .back-link svg { width: 14px; height: 14px; }
     footer {
       margin-top: 48px;
@@ -425,6 +521,11 @@ function buildShareHtml(item) {
 
     <h1>${escHtml(displayTitle)}</h1>
 
+    ${imageRelUrl ? `
+    <figure class="preview">
+      <img src="${escHtml(imageRelUrl)}" alt="${escHtml(displayTitle)}" loading="lazy">
+    </figure>` : ''}
+
     ${audioAbsUrl ? `
     <div class="audio-wrap">
       <div class="audio-hint">
@@ -436,6 +537,8 @@ function buildShareHtml(item) {
 
     <div class="content">${contentHtml}</div>
 
+    ${mediaHtml}
+
     ${source ? `<div class="source">出处：${escHtml(source)}</div>` : ''}
 
     <a class="back-link" href="${escHtml(backHref)}">← 返回全部选读</a>
@@ -444,9 +547,11 @@ function buildShareHtml(item) {
   </div>
 
   <script>
-    // 无 SITE_URL 时，运行时用当前页面的 location 将相对 URL 补齐为绝对地址。
-    // 分享页的 og:url/twitter:player 值为「相对站点根的路径」（如 选读/1.html），
-    // og:audio/twitter:player:stream 值为「相对本页目录的路径」（如 ../bgm/x.mp3）。
+    // 无 SITE_URL 时，运行时用当前页面的 location 将相对 URL 补齐为绝对地址
+    //（对不执行 JS 的 X 爬虫无效，仅作浏览器/支持渲染的抓取兜底；
+    //  生产建议在构建时配置 SITE_URL，让 og:url/og:image 直接烘成绝对 https）。
+    // og:url 为「相对站点根的路径」（如 选读/1.html）；
+    // og:audio / og:image 为「相对本页目录的路径」（如 ../audio/quotes/x.mp3、../gallery/imgN.png）。
     (function () {
       var hasSite = ${SITE_URL ? 'true' : 'false'};
       if (hasSite) return;
@@ -469,13 +574,13 @@ function buildShareHtml(item) {
         root += '/' + pathParts[i];
       }
       root += '/';
-      // og:url / twitter:player —— 相对站点根
+      // og:url —— 相对站点根（如 选读/1.html）
       patch('meta[property="og:url"]', root);
-      patch('meta[name="twitter:player"]', root);
-      // og:audio / twitter:player:stream —— 相对当前页
+      // og:audio / og:image —— 相对当前页目录（如 ../audio/...、../gallery/imgN.png）
       patch('meta[property="og:audio"]', pageDir);
       patch('meta[property="og:audio:secure_url"]', pageDir);
-      patch('meta[name="twitter:player:stream"]', pageDir);
+      patch('meta[property="og:image"]', pageDir);
+      patch('meta[property="og:image:secure_url"]', pageDir);
     })();
   </script>
 </body>
@@ -486,10 +591,58 @@ function buildShareHtml(item) {
 // main
 // ---------------------------------------------------------------------------
 
+/**
+ * 给首页 dist/index.html 补写 Open Graph / Twitter 基础 meta（含一张 gallery 预览图），
+ * 让“分享整站/首页”时也能出预览卡片。幂等：已含相关 meta 则跳过。
+ */
+function injectIndexOg() {
+  const file = path.join(OUT_DIR, 'index.html');
+  if (!fs.existsSync(file)) return;
+  let html = fs.readFileSync(file, 'utf8');
+
+  const galleryImages = getGalleryImages();
+  const hasOgTitle = /property="og:title"/.test(html);
+
+  if (hasOgTitle) return; // 已注入过
+
+  const ogUrl = SITE_URL ? `${SITE_URL}/index.html` : 'index.html';
+  const imageSite = galleryImages.length
+    ? galleryImages[pickGalleryIndex(0, galleryImages.length)]
+    : '';
+  const ogImage = SITE_URL && imageSite
+    ? `${SITE_URL}/${imageSite}`.replace(/([^:])\/+/g, '$1/')
+    : imageSite;
+
+  const ogBlock = [
+    '<meta property="og:type" content="website">',
+    '<meta property="og:title" content="户晨风 · 摘录">',
+    '<meta property="og:description" content="户晨风直播文字稿精华摘录：选读 / 观点 / 语录 / 展厅。安静阅读，边读边听。">',
+    '<meta property="og:site_name" content="户晨风 · 摘录">',
+    '<meta property="og:url" content="' + escHtml(ogUrl) + '">',
+  ];
+  if (ogImage) {
+    ogBlock.push('<meta property="og:image" content="' + escHtml(ogImage) + '">');
+    ogBlock.push('<meta property="og:image:secure_url" content="' + escHtml(ogImage) + '">');
+  }
+  ogBlock.push('<meta name="twitter:card" content="' + (ogImage ? 'summary_large_image' : 'summary') + '">');
+  ogBlock.push('<meta name="twitter:title" content="户晨风 · 摘录">');
+  ogBlock.push('<meta name="twitter:description" content="户晨风直播文字稿精华摘录：选读 / 观点 / 语录 / 展厅。">');
+  if (ogImage) ogBlock.push('<meta name="twitter:image" content="' + escHtml(ogImage) + '">');
+
+  // 注入到 <head> 内、</head> 前
+  html = html.replace('</head>', '  ' + ogBlock.join('\n  ') + '\n  </head>');
+  fs.writeFileSync(file, html, 'utf8');
+  console.log('[gen-share-pages] 首页 index.html 已注入 og meta（og:image=' + (ogImage || '无，未发现 gallery 图') + '）');
+}
+
 function main() {
   const items = collectEssence(ESSENCE_DIR);
+
+  // 首页 og meta（无论有无选读都注入，保证分享首页也有预览图）
+  injectIndexOg();
+
   if (!items.length) {
-    console.log('[gen-share-pages] 未发现真实选读数据，跳过分享页生成。');
+    console.log('[gen-share-pages] 未发现真实选读数据，跳过详情静态页生成。');
     return;
   }
   const dir = path.join(OUT_DIR, DIR_NAME);
@@ -503,7 +656,7 @@ function main() {
     count++;
     console.log(`[gen-share-pages] ✔ 生成 ${path.relative(ROOT, file)}`);
   }
-  console.log(`[gen-share-pages] 共生成 ${count} 个分享页。`);
+  console.log(`[gen-share-pages] 共生成 ${count} 个静态详情页。`);
 }
 
 main();
