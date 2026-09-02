@@ -1,5 +1,5 @@
 <script setup>
-// 音频波形播放器（零第三方依赖，播客风格）
+// 音频波形播放器（播客风格）
 //
 // 波形采用「语音频带能量 + RMS」双指标合成的算法，明显区分“说话”与“停顿”：
 //   · 逐窗做 FFT，取人声主频段（约 300–3400 Hz）的能量占总能量的比重作为“说话量”，
@@ -13,6 +13,7 @@
 //   · 点击波形跳转、按住拖动游标实时预览
 // 底层仍用原生 <audio> 驱动播放。
 import { ref, computed, onMounted, onBeforeUnmount, watch } from "vue";
+import { Play, Pause, Repeat, RotateCcw, RotateCw } from "@lucide/vue";
 
 const props = defineProps({ src: { type: String, required: true } });
 
@@ -459,10 +460,7 @@ onBeforeUnmount(() => {
           :aria-pressed="loop"
           @click="toggleLoop"
         >
-          <svg viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M6 7h11.2l-1.9-1.9a1 1 0 0 1 1.4-1.4l3.5 3.5a1 1 0 0 1 0 1.4l-3.5 3.5a1 1 0 0 1-1.4-1.4L17.2 9H6a1 1 0 0 0 0 2h.8a1 1 0 1 1 0 2H6a3 3 0 0 1 0-6z" fill="currentColor"/>
-            <path d="M18 17H6.8l1.9 1.9a1 1 0 0 1-1.4 1.4L3.8 16.8a1 1 0 0 1 0-1.4l3.5-3.5a1 1 0 0 1 1.4 1.4L6.8 15H18a1 1 0 0 0 0-2h-.8a1 1 0 1 1 0-2H18a3 3 0 0 1 0 6z" fill="currentColor"/>
-          </svg>
+          <Repeat :aria-hidden="true" />
         </button>
 
         <button
@@ -472,10 +470,7 @@ onBeforeUnmount(() => {
           :aria-label="'快退 ' + SKIP + ' 秒'"
           @click="skip(-SKIP)"
         >
-          <svg viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M12.5 5.5a7 7 0 1 1-6.9 8.3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-            <path d="M9 3l3.5 3.5L9 10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
+          <RotateCcw :aria-hidden="true" />
           <span class="skip-num">15</span>
         </button>
 
@@ -486,12 +481,8 @@ onBeforeUnmount(() => {
           :title="playing ? '暂停' : '播放'"
           @click="toggle"
         >
-          <svg v-if="!playing" viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M7 4.5v15l12-7.5z" fill="currentColor" />
-          </svg>
-          <svg v-else viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M7 5h3.5v14H7zM13.5 5H17v14h-3.5z" fill="currentColor" />
-          </svg>
+          <Play v-if="!playing" :aria-hidden="true" />
+          <Pause v-else :aria-hidden="true" />
         </button>
 
         <button
@@ -501,10 +492,7 @@ onBeforeUnmount(() => {
           :aria-label="'快进 ' + SKIP + ' 秒'"
           @click="skip(SKIP)"
         >
-          <svg viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M11.5 5.5a7 7 0 1 0 6.9 8.3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-            <path d="M15 3l3.5 3.5L15 10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
+          <RotateCw :aria-hidden="true" />
           <span class="skip-num">15</span>
         </button>
       </div>
