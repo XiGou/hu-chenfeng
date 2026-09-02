@@ -24,8 +24,9 @@ links:                     # 可选 · 外链列表
 ```
 
 - **front-matter** 中的 `#` 为注释，`audio`/`video` 仅保留单行值。
-- `audio` 若为仓库内资源，填**相对 `public/` 的路径**（如 `audio/quotes/xx.mp3`）；
-  构建时会自动拼接站点 `BASE_URL`；外链 `http(s)://` 则原样保留。
+- `audio` 一律填**相对 `public/` 的仓库内资源路径**（如 `audio/quotes/xx.mp3`）；
+  构建时会自动拼接站点 `BASE_URL`。**不允许**以 `http(s)://` 外链形式保留，
+  外链音频须先下载并 commit 进 `public/audio/quotes/`。
 - 正文（front-matter 结束的 `---` 之后）即摘录文本 `text`，可含换行。
 
 ## 命名与 id
