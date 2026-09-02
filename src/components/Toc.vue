@@ -30,6 +30,10 @@ function fmtDate(d) {
       未找到与“{{ keyword }}”匹配的语录
     </p>
 
+    <p v-else-if="items.length === 0" class="list-empty">
+      暂无选读内容 —— 可通过仓库中的「提交新选读」Issue 模板添加。
+    </p>
+
     <ul v-else class="item-list">
       <li v-for="q in items" :key="q.id" class="item">
         <button class="item-btn" type="button" @click="emit('open', q.id)">

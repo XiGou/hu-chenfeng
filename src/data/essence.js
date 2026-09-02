@@ -4,7 +4,18 @@
 // 这些片段从 submodule `reference/hu-chenfeng` 的直播文字稿中手工摘取，
 // 截取其相对完整、可独立阅读的段落作为展示。每一条都标注了原始出处，
 // 可在参考仓库中按月份/日期追溯完整上下文。
+//
+// 数据维护方式：
+//   每一条选读内容独立维护为一个 Markdown 文件，存放于 `src/data/essence/`。
+//   文件采用「YAML front-matter + 正文」的易读格式，字段见目录内 README。
+//   此处（essence.js）仅负责：
+//     1) 导出站点 meta
+//     2) 用 import.meta.glob 收集目录下所有单文件选读（按数字 id 命名），
+//        解析为列表并按 id 升序输出。
+//   新增选读通过仓库「提交新选读」Issue 模板触发工作流自动新增文件。
 // ==========================================================================
+
+import { parseMarkdownItem } from "./lib/essence-md.js";
 
 export const meta = {
   title: "户晨风 · 摘录",
@@ -13,83 +24,33 @@ export const meta = {
     "从 2023–2025 年的直播文字稿中挑选的只言片语，供安静阅读。另有「观点」（立场之传）、「语录」（言论之辑）与「展厅」（图像之览）三个栏目。",
 };
 
-// source 指向 submodule 内相对路径；date 用于展示
 // 兼容 GitHub Pages 子路径部署的静态资源基址
 const base = import.meta.env.BASE_URL || "/";
 
-export const essence = [
-  {
-    id: 1,
-    date: "2025-01-14",
-    theme: "节奏",
-    text: "我的人生啊，可以说是跟绝大部分人不一样。我的人生是——你看视频需要加速吧？我一般都加速的。我的人生是三倍速。",
-    source: "reference/hu-chenfeng/2025年01月/2025-01-14.md",
-    audio: `${base}audio/quotes/2025-01-14.mp3`,
-  },
-  {
-    id: 2,
-    date: "2023-05-21",
-    theme: "经济",
-    text: "一切的行为其实都可以用经济去看待它。任何事物其本质都是可以用经济来解释的，社会的任何活动也都是经济活动。",
-    source: "reference/hu-chenfeng/2023年05月/2023-05-21.md",
-  },
-  {
-    id: 3,
-    date: "2023-11-15",
-    theme: "现实",
-    text: "有钱人能享受到更好的食物，本来就是啊，这个难道不是社会现实吗？",
-    source: "reference/hu-chenfeng/2023年11月/2023-11-15.md",
-    links: [
-      { type: "youtube", label: "完整直播录像", url: "https://www.youtube.com/results?search_query=户晨风+2023-11-15" },
-    ],
-  },
-  {
-    id: 4,
-    date: "2023-12-05",
-    theme: "幸存者偏差",
-    text: "你这是幸存者偏差，因为这几篇东西，是在过去几千年里面好不容易才找出来的这几篇。",
-    source: "reference/hu-chenfeng/2023年12月/2023-12-05.md",
-  },
-  {
-    id: 5,
-    date: "2023-03-12",
-    theme: "价值观",
-    text: "你喜欢礼物、喜欢钱很正常，我也喜欢礼物、喜欢钱，但是前提是你得通过自己的努力。",
-    source: "reference/hu-chenfeng/2023年03月/2023-03-12-INC.md",
-  },
-  {
-    id: 6,
-    date: "2023-04-15",
-    theme: "自述",
-    text: "我是一个普通人，我也没有什么太大的雄心。直播通过正能量的直播挣点钱，这就是我最大的心愿了。",
-    source: "reference/hu-chenfeng/2023年04月/2023-04-15.md",
-  },
-  {
-    id: 7,
-    date: "2023-12-03",
-    theme: "幸存者偏差",
-    text: "你这是幸存者偏差。挂到了这个是幸存者，绝大部分是挂不到的。北京协和、四川华西挂不到，绝大部分是挂不到的。",
-    source: "reference/hu-chenfeng/2023年12月/2023-12-03.md",
-  },
-  {
-    id: 8,
-    date: "2023-04-18",
-    theme: "认知",
-    text: "你就是一切以 money 为中心。对，你绝对不是 23 岁，23 岁没有你这样的认知。",
-    source: "reference/hu-chenfeng/2023年04月/2023-04-18.md",
-  },
-  {
-    id: 9,
-    date: "2023-12-30",
-    theme: "意义",
-    text: "那我现在问你，那我学这个东西，它的意义在哪里？因为我的人生是有限的。",
-    source: "reference/hu-chenfeng/2023年12月/2023-12-30.md",
-  },
-  {
-    id: 10,
-    date: "2023-05-01",
-    theme: "职业",
-    text: "我就做教育的，做教育的。对，那天跟你说过，不过我那天麦不好就提前下麦了。",
-    source: "reference/hu-chenfeng/2023年05月/2023-05-01.md",
-  },
-];
+// 收集 src/data/essence/ 下所有以数字命名的单文件选读（*.md）。
+// 数字前缀即 id；README 等说明文件（非数字开头）不会被误收。
+const modules = import.meta.glob("./essence/[0-9]*.md", {
+  eager: true,
+  query: "?raw",
+  import: "default",
+});
+
+// 归一化 audio 资源路径：
+//   - 外链 URL → 原样保留
+//   - 仓库内资源路径（相对 public，如 audio/quotes/xx.mp3）→ 拼 BASE_URL
+function normalizeAudio(value) {
+  if (!value) return value;
+  if (/^https?:\/\//.test(value)) return value;
+  const p = value.startsWith("public/") ? value.slice("public/".length) : value;
+  return base + (p.startsWith("/") ? p.slice(1) : p);
+}
+
+// 选读列表 — 由 src/data/essence/*.md 自动汇总，按 id 升序。
+export const essence = Object.keys(modules)
+  .map((path) => {
+    const item = parseMarkdownItem(modules[path]);
+    if (item.audio) item.audio = normalizeAudio(item.audio);
+    return item;
+  })
+  .filter((item) => item.id !== undefined)
+  .sort((a, b) => a.id - b.id);

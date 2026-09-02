@@ -192,6 +192,13 @@ a { color: inherit; }
   color: var(--fg-faint);
   font-size: 0.92rem;
 }
+.list-empty {
+  padding: 2.5rem 1rem;
+  text-align: center;
+  color: var(--fg-faint);
+  font-size: 0.92rem;
+  line-height: 1.8;
+}
 
 /* ---------- 详情 ---------- */
 .back-btn {

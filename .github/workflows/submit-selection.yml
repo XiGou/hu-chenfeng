@@ -4,8 +4,9 @@
 # 用户在仓库内按「提交新选读」Issue 模板填写文本、标题、tag、出处、
 # 音频路径等必要信息后提交 Issue，本工作流会自动：
 #   1. 解析 Issue body 中的各字段
-#   2. 追加一条新选读到 src/data/essence.js（id 自动递增）
-#   3. 生成一个 PR，包含以上代码变更，供人工/自动审阅后合入
+#   2. 将本条选读生成为独立 Markdown 文件 src/data/essence/<id>.md
+#      （id 自动取现有最大 id + 1；格式见 src/data/essence/README.md）
+#   3. 生成一个 PR，包含以上文件变更，供人工/自动审阅后合入
 #
 # 触发条件：
 #   - 新 Issue 被创建（opened）
@@ -46,13 +47,14 @@ jobs:
         with:
           node-version: 20
 
-      - name: 解析并追加选读数据
+      - name: 解析 Issue 并新增选读单文件
         run: |
           node .github/workflows/scripts/append-selection.mjs /tmp/issue-body.txt
 
-      - name: 校验 essence.js 语法
+      - name: 校验数据模块语法
         run: |
           node --check src/data/essence.js && echo "essence.js 语法校验通过"
+          node --check src/data/lib/essence-md.js && echo "解析器语法校验通过"
 
       - name: 创建 Pull Request
         id: cpr
@@ -68,7 +70,8 @@ jobs:
             自动由 Issue #${{ github.event.issue.number }} 生成。
 
             - **标题**：${{ steps.issue.outputs.issue_title }}
-            - 已将新选读追加到 `src/data/essence.js`
+            - 已将本条选读生成为独立文件 `src/data/essence/<id>.md`
+              （前端 essence.js 自动收集汇总）
 
             请在审阅后合入本 PR。
 

@@ -7,7 +7,8 @@ body:
     attributes:
       value: |
         ## 📝 提交新选读
-        请填写以下字段，保存后 Action 会自动将本条内容追加到选读列表并生成 PR。
+        请填写以下字段，保存后 Action 会自动将本条内容生成为
+        `src/data/essence/<id>.md` 独立文件并生成 PR（前端 essence.js 自动收集汇总）。
 
   - type: input
     id: title
@@ -33,7 +34,7 @@ body:
     id: text
     attributes:
       label: 正文文本
-      description: 摘录的正文内容
+      description: 摘录的正文内容（会成为该选读文件的正文）
       placeholder: 请输入摘录的正文……
     validations:
       required: true
@@ -54,9 +55,9 @@ body:
       description: >-
         支持以下三种方式之一：① 直接在此处上传音频文件（上传到 Issue 的二进制附件，
         将自动下载并贴入仓库 public/audio/quotes/）；② 填写音频外链 URL（原样保留）；③ 填写仓库内路径（如
-        public/audio/quotes/xxx.mp3）。
+        audio/quotes/xxx.mp3）。
       placeholder: |
-        可直接拖拽上传音频文件；或填写外链 URL；或填写仓库内路径，如 public/audio/quotes/xxx.mp3
+        可直接拖拽上传音频文件；或填写外链 URL；或填写仓库内路径，如 audio/quotes/xxx.mp3
     validations:
       required: false
 
