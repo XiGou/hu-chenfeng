@@ -392,6 +392,15 @@ function onEnded() {
   }
 }
 
+// 播放进度以 <audio> 原生 timeupdate 事件为准驱动染色/进度刷新，
+// 与 rAF 轮询叠加兜底：任何环境下都能保证"边播放边染色"。
+function onTimeUpdate() {
+  const a = audioEl.value;
+  if (!a) return;
+  current.value = a.currentTime || 0;
+  draw();
+}
+
 function loopTick() {
   const a = audioEl.value;
   if (a) {
@@ -517,6 +526,7 @@ onBeforeUnmount(() => {
       @play="onPlay"
       @pause="onPause"
       @ended="onEnded"
+      @timeupdate="onTimeUpdate"
     ></audio>
   </div>
 </template>
