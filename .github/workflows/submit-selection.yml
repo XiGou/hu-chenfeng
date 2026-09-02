@@ -9,14 +9,14 @@
 #   3. 生成一个 PR，包含以上文件变更，供人工/自动审阅后合入
 #
 # 触发条件：
-#   - 新 Issue 被创建（opened）
+#   - Issue 被创建（opened）或重新打开（reopened）
 #   - 且该 Issue 带有「选读」标签
 # ==========================================================================
 name: Submit Selection
 
 on:
   issues:
-    types: [opened]
+    types: [opened, reopened]
 
 permissions:
   contents: write
