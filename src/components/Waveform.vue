@@ -220,8 +220,11 @@ function fftMag(input) {
 function hann(i, n) { return 0.5 - 0.5 * Math.cos((2 * Math.PI * i) / (n - 1)); }
 
 function roundRectPath(ctx, x, y, w, h, r) {
+  // beginPath 必须在每次画单个柱前调用，否则 roundRect 会累积到同一条路径，
+  // 导致后续 ctx.fill() 把之前所有柱都一起用当前样式覆盖（波形不会实时染色）。
+  ctx.beginPath();
   if (typeof ctx.roundRect === "function") { ctx.roundRect(x, y, w, h, r); }
-  else { ctx.beginPath(); ctx.rect(x, y, w, h); }
+  else { ctx.rect(x, y, w, h); }
 }
 
 function draw() {
