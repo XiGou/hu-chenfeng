@@ -53,11 +53,12 @@ body:
     attributes:
       label: 音频（可选）
       description: >-
-        支持以下三种方式之一：① 直接在此处上传音频文件（上传到 Issue 的二进制附件，
-        将自动下载并贴入仓库 public/audio/quotes/）；② 填写音频外链 URL（原样保留）；③ 填写仓库内路径（如
+        音频不允许以「外链 URL」形式提交，必须贴入仓库：① 直接在此处上传音频文件
+        （上传到 Issue 的二进制附件，将自动下载并 commit 进仓库 public/audio/quotes/）；
+        ② 填写音频链接 URL（会由工作流自动下载并 commit 进仓库）；③ 填写仓库内已存在的路径（如
         audio/quotes/xxx.mp3）。
       placeholder: |
-        可直接拖拽上传音频文件；或填写外链 URL；或填写仓库内路径，如 audio/quotes/xxx.mp3
+        可直接拖拽上传音频文件；或填写音频链接 URL；或填写仓库内路径，如 audio/quotes/xxx.mp3
     validations:
       required: false
 

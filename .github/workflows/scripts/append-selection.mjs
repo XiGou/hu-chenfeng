@@ -10,13 +10,15 @@
  * 选读数据采用「每内容单文件」维护（见 src/data/essence/README.md），因此
  * 本脚本不再往大数组里插入，而是新增一个编号的 Markdown 文件。
  *
- * 音频（audio）字段支持三种取值：
- *   1. GitHub Issue 附件 URL（用户上传的二进制音频文件）
- *      → 下载到 public/audio/quotes/ 并贴入仓库，md 引用仓库内资源路径
- *   2. 外链 URL（https:// 其他域名）
- *      → 原样保留
- *   3. 仓库内路径（如 audio/quotes/... 或 public/audio/quotes/...）
- *      → 规整为相对 public 的站点资源路径保留
+ * 音频（audio）字段说明：
+ *   音频一律不允许以「外链 URL」形式保留 —— 必须贴入仓库，
+ *   由站点资源路径（相对 public，如 audio/quotes/xxx.mp3）引用。
+ *   取值分两类：
+ *   1. http(s) 链接（GitHub Issue 附件或任意外链）
+ *      → 下载到 public/audio/quotes/ 并 commit 进仓库；若下载失败则报错中断，
+ *        绝不回退为保留外链。
+ *   2. 仓库内路径（如 audio/quotes/... 或 public/audio/quotes/...）
+ *      → 规整为相对 public 的站点资源路径保留。
  */
 import fs from 'node:fs';
 import path from 'node:path';
@@ -101,7 +103,7 @@ function extFromUrl(url) {
   return m ? `.${m[1].toLowerCase()}` : '';
 }
 
-// 下载 GitHub issue 附件音频到仓库，返回站点相对路径；失败返回 null
+// 下载音频 URL（GitHub Issue 附件或任意外链）到仓库，返回站点相对路径；失败返回 null
 async function downloadGithubAsset(url, baseName) {
   let res;
   try {
@@ -127,26 +129,21 @@ async function downloadGithubAsset(url, baseName) {
 }
 
 // 解析音频字段，返回写入 md front-matter 的 audio 值：
-//   - 仓库内/下载音频 → 相对 public 的站点资源路径（如 audio/quotes/xx.mp3）
-//   - 外链 URL → 原样保留
+//   - 下载音频/仓库内资源 → 相对 public 的站点资源路径（如 audio/quotes/xx.mp3）
+//   - 音频一律不允许保留为外链 URL；任何 http(s) 链接都必须下载入仓库，
+//     下载失败即报错中断，绝不回退为保留外链。
 async function resolveAudio(raw, baseName) {
   if (!raw) return null;
   const url = extractUrl(raw);
-  const isGithubAsset =
-    /^https:\/\/github\.com\/user-attachments\/assets\//.test(url) ||
-    /^https:\/\/user-images\.githubusercontent\.com\//.test(url);
 
-  if (isGithubAsset) {
-    // issue 中的二进制附件 → 下载贴入仓库
+  if (/^https?:\/\//.test(url)) {
+    // GitHub Issue 附件或任意外链 → 统一下载贴入仓库
     const rel = await downloadGithubAsset(url, baseName);
     if (rel) return rel;
-    // 下载失败回退为外链
-    return url;
+    // 下载失败：音频必须以仓库内资源引用，故直接中断本次提交
+    throw new Error(`音频链接下载失败，不允许保留外链：${url}（请将音频文件作为 Issue 附件重新上传）`);
   }
-  if (/^https?:\/\//.test(url)) {
-    // 外链 → 保留
-    return url;
-  }
+
   // 仓库内路径 → 规整为相对 public 的站点资源路径
   let p = raw.trim().replace(/^public\//, '');
   if (p.startsWith('/')) p = p.slice(1);
