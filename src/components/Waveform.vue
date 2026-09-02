@@ -594,16 +594,23 @@ onBeforeUnmount(() => {
 .ctrl-loop.on { color: #fff; background: var(--fg); border-color: var(--fg); }
 
 /* 快退/快进：含 15 字样 */
-.ctrl-skip { position: relative; }
-.ctrl-skip svg { width: 16px; height: 16px; }
+.ctrl-skip {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+}
+.ctrl-skip svg { width: 15px; height: 15px; }
 .skip-num {
-  position: absolute;
-  bottom: 7px;
-  font-size: 0.5rem;
+  font-size: 0.42rem;
   font-weight: 700;
+  line-height: 1;
   letter-spacing: -0.02em;
   color: currentColor;
   font-variant-numeric: tabular-nums;
+  margin-top: 1px;
 }
 
 /* 主播放键 */
