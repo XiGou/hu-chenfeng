@@ -334,21 +334,6 @@ a { color: inherit; }
 }
 .entry .media-link:hover { color: var(--fg); border-color: var(--fg-faint); }
 
-.entry .source {
-  margin-top: 2.5rem;
-  font-size: 0.82rem;
-  color: var(--fg-faint);
-  line-height: 1.6;
-}
-.entry .source code {
-  font-size: 0.78rem;
-  background: var(--line);
-  padding: 0.1rem 0.35rem;
-  border-radius: 4px;
-}
-.entry .source a { color: var(--fg-soft); text-decoration: none; }
-.entry .source a:hover { color: var(--fg); text-decoration: underline; }
-
 /* ---------- 栏目导航 ---------- */
 .section-nav {
   display: flex;
@@ -432,11 +417,6 @@ a { color: inherit; }
   line-height: 1.9;
   color: var(--fg);
   white-space: pre-line;
-}
-.vp-source {
-  margin-top: 0.6rem;
-  font-size: 0.8rem;
-  color: var(--fg-faint);
 }
 
 /* ---------- 语录 ---------- */
@@ -545,10 +525,6 @@ a { color: inherit; }
   white-space: pre-line;
   margin-bottom: 0.5rem;
 }
-.quo-source {
-  font-size: 0.8rem;
-  color: var(--fg-faint);
-}
 .quo-summary {
   margin-top: 2.2rem;
   padding: 1.2rem 1.4rem;
@@ -567,12 +543,9 @@ a { color: inherit; }
   font-size: 0.82rem;
   color: var(--fg-faint);
   display: flex;
-  justify-content: space-between;
   flex-wrap: wrap;
   gap: 0.6rem;
 }
-.site-foot a { color: var(--fg-soft); text-decoration: none; }
-.site-foot a:hover { color: var(--fg); text-decoration: underline; }
 .foot-right {
   display: flex;
   align-items: center;

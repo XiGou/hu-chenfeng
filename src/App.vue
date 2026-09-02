@@ -145,10 +145,5 @@ function goList() {
 
   <footer class="site-foot">
     <span>户晨风 · 摘录</span>
-    <a
-      href="https://github.com/Olcmyk/HuChenFeng"
-      target="_blank"
-      rel="noopener noreferrer"
-    >HuChenFeng 全集 ↗</a>
   </footer>
 </template>

@@ -104,17 +104,5 @@ onMounted(() => {
         </a>
       </div>
     </div>
-
-    <p class="source">
-      出处：<code>{{ quote.source }}</code>
-      <template v-if="quote.source">
-        <br />
-        <a
-          :href="'https://github.com/Olcmyk/HuChenFeng/blob/main/' + quote.source.replace('reference/hu-chenfeng/', '')"
-          target="_blank"
-          rel="noopener noreferrer"
-        >在 HuChenFeng 仓库中查看完整上下文 ↗</a>
-      </template>
-    </p>
   </article>
 </template>

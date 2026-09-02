@@ -21,10 +21,6 @@ const filtered = computed(() => {
     }))
     .filter((sec) => sec.items.length > 0);
 });
-
-function fmtSource(s) {
-  return s.replace(/\.md$/, "");
-}
 </script>
 
 <template>
@@ -35,7 +31,7 @@ function fmtSource(s) {
     </div>
 
     <p class="vp-note">
-      总结性的一栏，简要说明户晨风的主要立场。由 AI 通读《HuChenFeng 直播文字稿全集》（2023–2025，524 篇）后归纳而成，忠于原文、每条可追溯出处——若比之古籍，犹《史记·户子列传》，为其人立传。
+      总结性的一栏，简要说明户晨风的主要立场。由 AI 通读其直播文字稿全集（2023–2025，524 篇）后归纳而成，忠于原文——若比之古籍，犹《史记·户子列传》，为其人立传。
     </p>
 
     <p v-if="keyword && filtered.length === 0" class="search-empty">
@@ -53,7 +49,6 @@ function fmtSource(s) {
         <li v-for="(it, i) in sec.items" :key="i" class="vp-item">
           <h3 class="vp-item-title">{{ it.title }}</h3>
           <blockquote class="vp-quote">{{ it.quote }}</blockquote>
-          <p class="vp-source">—— {{ fmtSource(it.source) }}</p>
         </li>
       </ul>
     </section>

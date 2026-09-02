@@ -14,9 +14,7 @@
   - **展厅**：收集户晨风先生常见的图像资料及其介绍，点击后可查看大图
 - **实时检索**：搜索框可按关键词 / 主题 / 日期实时过滤当前栏目
 - **多媒体可选**：每条摘录可独立附带音频、视频、外链
-- **追溯出处**：每条摘录标注原始出处，可一键跳转到 HuChenFeng 全集对应章节
 - **悬浮 BGM 播放器**：右下角悬浮迷你播放器，可在多首静态 BGM 中任选一首循环播放
-- **Submodule 集成**：`reference/hu-chenfeng` 以 submodule 方式引入 [HuChenFeng 全集](https://github.com/Olcmyk/HuChenFeng)
 
 ## 🛠 技术栈
 
@@ -142,7 +140,7 @@ links:                           # 外链列表（可选）
 │   └── components/
 │       ├── Masthead.vue        # 页头
 │       ├── Toc.vue             # 选读：摘录列表 + 实时检索
-│       ├── Entry.vue           # 选读：详情（文本 + 多媒体 + 出处）
+│       ├── Entry.vue           # 选读：详情（文本 + 多媒体）
 │       ├── Viewpoints.vue      # 观点栏目（重要观点列表）
 │       ├── Quotes.vue          # 语录栏目（语录小文章）
 │       ├── Gallery.vue         # 展厅栏目（图像资料 + 大图灯箱）
