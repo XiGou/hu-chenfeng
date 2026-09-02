@@ -1,0 +1,71 @@
+name: 提交新选读
+description: 按固定格式提交一条新的精华选读信息，将自动生成 PR
+title: "选读：<在此填写标题>"
+labels: ["选读"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## 📝 提交新选读
+        请填写以下字段，保存后 Action 会自动将本条内容追加到选读列表并生成 PR。
+
+  - type: input
+    id: title
+    attributes:
+      label: 标题
+      description: 本条选读的简短标题
+      placeholder: 例如：关于人生节奏的一段话
+    validations:
+      required: true
+
+  - type: input
+    id: theme
+    attributes:
+      label: 主题 tag
+      description: >-
+        填写主题标签。可直接使用常用值（节奏、经济、现实、价值观、认知、自述、
+        幸存者偏差、意义、职业、其他），也可以自定义任意主题词。
+      placeholder: 例如：节奏（常用标签见描述）
+    validations:
+      required: true
+
+  - type: textarea
+    id: text
+    attributes:
+      label: 正文文本
+      description: 摘录的正文内容
+      placeholder: 请输入摘录的正文……
+    validations:
+      required: true
+
+  - type: input
+    id: source
+    attributes:
+      label: 原始出处
+      description: 指向参考仓库内的文件路径，如 reference/hu-chenfeng/2025年01月/2025-01-14.md
+      placeholder: reference/hu-chenfeng/YYYY年MM月/YYYY-MM-DD.md
+    validations:
+      required: false
+
+  - type: textarea
+    id: audio
+    attributes:
+      label: 音频（可选）
+      description: >-
+        支持以下三种方式之一：① 直接在此处上传音频文件（上传到 Issue 的二进制附件，
+        将自动下载并贴入仓库 public/audio/quotes/）；② 填写音频外链 URL（原样保留）；③ 填写仓库内路径（如
+        public/audio/quotes/xxx.mp3）。
+      placeholder: |
+        可直接拖拽上传音频文件；或填写外链 URL；或填写仓库内路径，如 public/audio/quotes/xxx.mp3
+    validations:
+      required: false
+
+  - type: textarea
+    id: links
+    attributes:
+      label: 外链（可选）
+      description: 每行一条，格式为「类型|标签|URL」，如 youtube|完整直播录像|https://...
+      placeholder: |
+        youtube|完整直播录像|https://www.youtube.com/...
+    validations:
+      required: false
