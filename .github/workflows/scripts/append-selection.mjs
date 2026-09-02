@@ -1,22 +1,26 @@
 #!/usr/bin/env node
 /**
- * 解析 GitHub Issue（表单式模板）内容，将新选读信息追加到 src/data/essence.js，
- * 供 create-pull-request Action 生成 PR。
+ * 解析 GitHub Issue（表单式模板）内容，将一条新选读生成为独立的 Markdown
+ * 文件 `src/data/essence/<id>.md`，供 create-pull-request Action 生成 PR。
  *
  * 用法：
  *   node append-selection.mjs <issue-body-file>
  *
  * 说明：仓库 package.json 声明了 "type": "module"，本脚本采用 ESM（.mjs）。
+ * 选读数据采用「每内容单文件」维护（见 src/data/essence/README.md），因此
+ * 本脚本不再往大数组里插入，而是新增一个编号的 Markdown 文件。
  *
  * 音频（audio）字段支持三种取值：
  *   1. GitHub Issue 附件 URL（用户上传的二进制音频文件）
- *      → 下载到 public/audio/quotes/ 并贴入仓库，essence.js 引用本地资源路径
+ *      → 下载到 public/audio/quotes/ 并贴入仓库，md 引用仓库内资源路径
  *   2. 外链 URL（https:// 其他域名）
  *      → 原样保留
- *   3. 仓库内路径（如 public/audio/... 或 audio/quotes/...）
- *      → 转成站点资源路径保留
+ *   3. 仓库内路径（如 audio/quotes/... 或 public/audio/quotes/...）
+ *      → 规整为相对 public 的站点资源路径保留
  */
 import fs from 'node:fs';
+import path from 'node:path';
+import { stringifyMarkdownItem, parseMarkdownItem } from '../../../src/data/lib/essence-md.js';
 
 const bodyFile = process.argv[2];
 if (!bodyFile) {
@@ -42,7 +46,6 @@ function parseSections(raw) {
 }
 
 const sec = parseSections(body);
-const title = sec['标题'] || '';
 const theme = sec['主题 tag'] || '其他';
 const text = sec['正文文本'] || '';
 const source = sec['原始出处'] || '';
@@ -66,23 +69,11 @@ const links = linksRaw
   })
   .filter(Boolean);
 
-// id 自动生成：取现有最大 id + 1
-const essencePath = 'src/data/essence.js';
-const essenceSrc = fs.readFileSync(essencePath, 'utf8');
-const idRe = /\bid:\s*(\d+)/g;
-let maxId = 0;
-let m;
-while ((m = idRe.exec(essenceSrc)) !== null) {
-  const n = parseInt(m[1], 10);
-  if (n > maxId) maxId = n;
-}
-const newId = maxId + 1;
-
 // ================= 音频处理 =================
 // 下载的音频文件存放目录（相对仓库根）
 const AUDIO_DIR = 'public/audio/quotes';
-// essence.js 顶部定义的基础路径变量名
-const BASE_VAR = '${base}';
+// essence 单文件目录（相对仓库根）
+const ESSENCE_DIR = 'src/data/essence';
 
 // 从文本中提取 URL（兼容 markdown 链接 [文本](url) / ![文本](url)）
 function extractUrl(raw) {
@@ -131,13 +122,13 @@ async function downloadGithubAsset(url, baseName) {
   const buf = Buffer.from(await res.arrayBuffer());
   fs.writeFileSync(dest, buf);
   console.log(`已下载音频并贴入仓库: ${dest} (${buf.length} bytes)`);
-  // 返回站点资源相对路径（相对 public 根，供 ${base} 拼接）
+  // 返回站点资源相对路径（相对 public 根，essence.js 会自动拼 BASE_URL）
   return `audio/quotes/${filename}`;
 }
 
-// 解析音频字段，返回写入 essence.js 的值：
-//   - 返回 { template: true,  value } 表示需要输出 ${base}... 模板字符串
-//   - 返回 { template: false, value } 表示输出普通字符串（外链）
+// 解析音频字段，返回写入 md front-matter 的 audio 值：
+//   - 仓库内/下载音频 → 相对 public 的站点资源路径（如 audio/quotes/xx.mp3）
+//   - 外链 URL → 原样保留
 async function resolveAudio(raw, baseName) {
   if (!raw) return null;
   const url = extractUrl(raw);
@@ -148,70 +139,61 @@ async function resolveAudio(raw, baseName) {
   if (isGithubAsset) {
     // issue 中的二进制附件 → 下载贴入仓库
     const rel = await downloadGithubAsset(url, baseName);
-    if (rel) {
-      return { template: true, value: `${BASE_VAR}${rel}` };
-    }
+    if (rel) return rel;
     // 下载失败回退为外链
-    return { template: false, value: url };
+    return url;
   }
   if (/^https?:\/\//.test(url)) {
     // 外链 → 保留
-    return { template: false, value: url };
+    return url;
   }
-  // 仓库内路径 → 统一转成站点资源路径
+  // 仓库内路径 → 规整为相对 public 的站点资源路径
   let p = raw.trim().replace(/^public\//, '');
   if (p.startsWith('/')) p = p.slice(1);
-  return { template: true, value: `${BASE_VAR}${p}` };
+  return p;
 }
+
+// ================= 计算新 id =================
+// 扫描 essence 单文件目录中所有数字命名的 md，取现有最大 id + 1
+function maxExistingId() {
+  let max = 0;
+  if (!fs.existsSync(ESSENCE_DIR)) return max;
+  for (const name of fs.readdirSync(ESSENCE_DIR)) {
+    const m = /^(\d+)\.md$/.exec(name);
+    if (!m) continue; // 跳过 README 等说明文件
+    try {
+      const item = parseMarkdownItem(
+        fs.readFileSync(path.join(ESSENCE_DIR, name), 'utf8')
+      );
+      if (typeof item.id === 'number' && item.id > max) max = item.id;
+    } catch (e) {
+      console.warn(`跳过解析 ${name}: ${e.message}`);
+    }
+  }
+  return max;
+}
+
+const newId = maxExistingId() + 1;
 
 // 音频默认文件名：用 id 作为基础名
-const audioBaseName = `selection-${newId}`;
-const audio = await resolveAudio(audioRaw, audioBaseName);
+const audio = await resolveAudio(audioRaw, `selection-${newId}`);
 
-// ================= 生成对象字面量 =================
-const objLines = ['  {'];
-const prop = (k, v, isStr = true, comma = true) => {
-  let line = `    ${k}: `;
-  line += isStr ? `"${String(v).replace(/"/g, '\\"').replace(/\n/g, ' ')}"` : v;
-  if (comma) line += ',';
-  objLines.push(line);
-};
+// ================= 生成单文件 Markdown 并写入 =================
+const item = { id: newId, date: undefined, theme, text, source, audio, links };
+const mdText = stringifyMarkdownItem(item);
+const destFile = path.join(ESSENCE_DIR, `${newId}.md`);
 
-prop('id', newId, false);
-if (theme) prop('theme', theme);
-prop('text', text);
-if (source) prop('source', source);
-if (audio) {
-  // audio 模板字符串（含 ${base}）需原样输出；普通字符串则转义
-  if (audio.template) {
-    objLines.push(`    audio: \`${audio.value}\`,`);
-  } else {
-    prop('audio', audio.value);
-  }
-}
-if (links.length) {
-  objLines.push('    links: [');
-  links.forEach((l, i) => {
-    const comma = i < links.length - 1 ? ',' : '';
-    objLines.push(`      { type: "${l.type}", label: "${l.label}", url: "${l.url}" }${comma}`);
-  });
-  objLines.push('    ],');
-}
-objLines.push('  },');
-const block = objLines.join('\n');
+fs.mkdirSync(ESSENCE_DIR, { recursive: true });
+fs.writeFileSync(destFile, mdText);
 
-// 在 essence 数组开头插入
-const marker = 'export const essence = [';
-const idx = essenceSrc.indexOf(marker);
-if (idx === -1) {
-  console.error('未找到 essence 数组定义');
+// ================= 自校验 =================
+// 生成后回读解析，确保单文件 md 能被 essence.js 正确读取（同源解析器）
+const back = parseMarkdownItem(fs.readFileSync(destFile, 'utf8'));
+if (back.id !== newId || !back.text) {
+  console.error('自校验失败：新文件无法被正确解析为选读条目。');
   process.exit(1);
 }
-const insertAt = idx + marker.length;
-const newSrc =
-  essenceSrc.slice(0, insertAt) + '\n' + block + essenceSrc.slice(insertAt);
-fs.writeFileSync(essencePath, newSrc);
 
-console.log(`已追加选读 id=${newId}`);
+console.log(`已新增选读文件: ${destFile} (id=${newId})`);
 console.log('--- 生成内容 ---');
-console.log(block);
+console.log(mdText);

@@ -60,24 +60,30 @@ npm run preview  # 预览构建产物
 
 ## 📝 如何新增一条摘录
 
-编辑 `src/data/essence.js`，在 `essence` 数组中追加一条：
+选读（Essence）的**每一条内容都独立维护为一个 Markdown 文件**，存放于
+`src/data/essence/`。文件采用「YAML front-matter + 正文」的易读格式，前端
+`essence.js` 会自动收集该目录下所有以数字命名的 `*.md` 并按 id 升序汇总。
+字段说明见 `src/data/essence/README.md`。
 
-```js
-{
-  id: 11,
-  date: "2025-01-14",                          // 直播日期 YYYY-MM-DD
-  theme: "节奏",                                // 主题标签
-  text: "摘录的正文……",                         // 文本
-  source: "reference/hu-chenfeng/2025年01月/2025-01-14.md", // 原始出处
-  audio: null,                                  // 音频路径（可选）
-  video: "https://www.youtube.com/embed/VIDEO_ID",          // 视频（可选）
-  links: [                                      // 外链（可选）
-    { type: "youtube", label: "YouTube", url: "..." }
-  ]
-}
+在 `src/data/essence/` 新建一个 `<id>.md`（id 取现有最大 id + 1）：
+
+```md
+---
+id: 11
+date: 2025-01-14                 # 直播日期 YYYY-MM-DD
+theme: 节奏                       # 主题标签
+source: reference/hu-chenfeng/2025年01月/2025-01-14.md  # 原始出处
+audio: audio/quotes/xxx.mp3      # 音频（可选，相对 public，勿带前缀）
+video: https://...               # 视频（可选，外链）
+links:                           # 外链列表（可选）
+  - type: youtube
+    label: YouTube
+    url: https://...
+---
+摘录的正文文本……
 ```
 
-> 出处路径对应 `reference/hu-chenfeng` submodule 内的文件，便于追溯完整上下文。
+> `source` 路径对应 `reference/hu-chenfeng` submodule 内的文件，便于追溯完整上下文。
 
 ## ✍️ 通过 Issue 提交新选读
 
@@ -89,8 +95,8 @@ npm run preview  # 预览构建产物
 
    主题 tag 可直接使用常用标签（节奏、经济、现实、价值观、认知、自述、幸存者偏差、意义、职业等），
    也可自由填写自定义主题词。
-3. 提交后，`Submit Selection` 工作流会解析内容、追加到 `src/data/essence.js`
-   并自动创建一个待合入的 PR
+3. 提交后，`Submit Selection` 工作流会解析内容、将本条选读生成为
+   `src/data/essence/<id>.md` 独立文件，并自动创建一个待合入的 PR
 
 **音频（可选）** 支持三种方式：
 
@@ -120,7 +126,9 @@ npm run preview  # 预览构建产物
 ├── src/
 │   ├── main.js                 # Vue 应用入口
 │   ├── App.vue                 # 根组件（栏目导航 + 视图切换）
-│   ├── data/essence.js         # 精华摘录数据（含 meta）
+│   ├── data/essence.js         # 精华摘录数据（meta + 单文件汇总器）
+│   ├── data/essence/           # 选读：每条内容一个独立 Markdown 文件
+│   ├── data/lib/essence-md.js  # 选读 Markdown 解析/序列化（前端与工作流共用）
 │   ├── data/viewpoints.js      # 观点栏目数据（源自 reference/viewpoints.md）
 │   ├── data/quotes.js          # 语录栏目数据（源自 reference/quotations/）
 │   ├── data/gallery.js         # 展厅栏目数据（图像资源及介绍）
