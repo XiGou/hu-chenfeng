@@ -1,4 +1,6 @@
 <script setup>
+import { splitThemes } from "../data/lib/tags.js";
+
 defineProps({
   items: { type: Array, required: true },
   total: { type: Number, default: 0 },
@@ -12,14 +14,12 @@ function fmtDate(d) {
   return p.length === 3 ? `${p[0]} · ${p[1]} · ${p[2]}` : d;
 }
 
-// 列表仅突出展示「标题」；无标题时回退为正文（兼容历史数据）
-// 有标题时附上正文首段的简短预览，正文完整内容点进去在详情页阅读
-function titleOf(q) {
-  return q.title || q.text;
-}
-function excerptOf(q) {
-  if (!q.title) return ""; // 无标题时正文即展示，无需再预览
-  return String(q.text || "").replace(/\s+/g, " ").slice(0, 60);
+// 选读首页以「目录」方式呈现：仅突出展示标题；正文/音频摘要不在此预览，
+// 完整内容点进详情页再读。无标题时回退为正文首行，便于识别条目。
+function itemLabel(q) {
+  if (q.title) return q.title;
+  const first = String(q.text || "").split("\n").map((s) => s.trim()).filter(Boolean)[0] || "";
+  return first;
 }
 </script>
 
@@ -49,10 +49,11 @@ function excerptOf(q) {
         <button class="item-btn" type="button" @click="emit('open', q.id)">
           <span class="item-meta">
             <time>{{ fmtDate(q.date) }}</time>
-            <span class="item-theme">{{ q.theme }}</span>
+            <span v-if="splitThemes(q.theme).length" class="item-themes">
+              <span v-for="(t, ti) in splitThemes(q.theme)" :key="ti" class="item-theme">{{ t }}</span>
+            </span>
           </span>
-          <span class="item-title">{{ titleOf(q) }}</span>
-          <span v-if="excerptOf(q)" class="item-excerpt">{{ excerptOf(q) }}…</span>
+          <span class="item-title">{{ itemLabel(q) }}</span>
         </button>
       </li>
     </ul>
