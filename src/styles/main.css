@@ -563,3 +563,32 @@ a { color: inherit; }
 @media (prefers-reduced-motion: reduce) {
   * { transition-duration: 0.001ms !important; }
 }
+
+/* ---------- 分享区 ---------- */
+.entry .share-bar {
+  margin-top: 2rem;
+  padding-top: 1.2rem;
+  border-top: 1px solid var(--line);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+.share-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.85rem;
+  color: var(--fg-soft);
+  text-decoration: none;
+  padding: 0.35rem 0.9rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: none;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.2s ease;
+  line-height: 1.4;
+}
+.share-btn:hover { color: var(--fg); border-color: var(--fg-faint); }
+.share-btn-ext { font-size: 1rem; padding: 0.25rem 0.8rem; }

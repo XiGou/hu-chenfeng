@@ -4,8 +4,15 @@
 # 用于在 CNB 平台"直接部署"户晨风语录站点。
 # 站点基于 Vite + Vue 3 构建，本流水线负责：
 #   1. 构建 —— 安装依赖并用 Vite 打包到 dist/
-#   2. 公网部署 —— 通过腾讯云 COS 对象存储 + 静态网站托管对外提供服务
-#   3. 同步代码 —— 将代码自动推送到 GitHub 同名仓库（XiGou/hu-chenfeng）
+#   2. 分享页生成 —— 为每条「选读」生成独立静态分享页（dist/选读/<id>.html）
+#   3. 公网部署 —— 通过腾讯云 COS 对象存储 + 静态网站托管对外提供服务
+#   4. 同步代码 —— 将代码自动推送到 GitHub 同名仓库（XiGou/hu-chenfeng）
+#
+# 【站点地址 SITE_URL】
+#   分享页的 og:url / twitter:player 等 meta 需要绝对 URL。可通过以下方式配置：
+#   - 流水线环境变量 SITE_URL（优先），例如 https://hu-chenfeng.example.com
+#   - 若未配置 SITE_URL，则回退用 COS_BUCKET 自动推导（https://<bucket>/）
+#   - 二者均未配置时，分享页会在浏览器运行时用 location 自动补齐
 #
 # 【COS 部署说明】
 #   部署到 COS 需要配置以下环境变量（可在 CNB「仓库设置 → 流水线环境变量」
@@ -43,8 +50,21 @@ main:
             git submodule update --init --recursive || echo "警告：submodule 初始化失败，跳过（构建不依赖其内容）"
             echo "==> 安装依赖"
             npm ci
-            echo "==> Vite 生产构建"
+
+            echo "==> 确定站点绝对地址（供分享页 og/twitter meta 使用）"
+            # 优先用环境变量 SITE_URL；未配置则用 COS_BUCKET 自动推导
+            if [ -n "$SITE_URL" ]; then
+              echo "    使用环境变量 SITE_URL=$SITE_URL"
+            elif [ -n "$COS_BUCKET" ]; then
+              export SITE_URL="https://${COS_BUCKET}"
+              echo "    使用 COS_BUCKET 推导 SITE_URL=$SITE_URL"
+            else
+              echo "    未配置 SITE_URL，分享页将运行时自动补齐（og:url 为相对路径）"
+            fi
+
+            echo "==> Vite 生产构建（含分享页生成）"
             npm run build
+
             echo "==> 校验构建产物"
             for f in dist/index.html; do
               [ -f "$f" ] || { echo "缺少构建产物: $f"; exit 1; }

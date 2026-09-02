@@ -15,6 +15,8 @@
 - **实时检索**：搜索框可按关键词 / 主题 / 日期实时过滤当前栏目
 - **多媒体可选**：每条摘录可独立附带音频、视频、外链
 - **悬浮 BGM 播放器**：右下角悬浮迷你播放器，可在多首静态 BGM 中任选一首循环播放
+- **独立分享页**：每条选读在构建时自动生成独立静态 HTML（`站点/选读/<序号>.html`），
+  含 OG / Twitter Card meta，可直接分享到 X(Twitter) 等平台并点播音频
 
 ## 🛠 技术栈
 
@@ -35,7 +37,7 @@ git submodule update --init --recursive
 
 npm install
 npm run dev      # 开发服务器（http://localhost:5173）
-npm run build    # 生产构建到 dist/
+npm run build    # 生产构建到 dist/（含分享页自动生成）
 npm run preview  # 预览构建产物
 ```
 
@@ -43,7 +45,7 @@ npm run preview  # 预览构建产物
 
 通过根目录 `.cnb.yml` 流水线，push 到 `main` 分支自动构建并部署：
 
-- **构建**：初始化 submodule → `npm ci` → `vite build`
+- **构建**：初始化 submodule → `npm ci` → `vite build` + `gen-share-pages`
 - **公网部署**：将 `dist/` 静态产物同步到腾讯云 COS 对象存储（配合静态网站托管）。
   需配置 `COS_SECRET_ID`、`COS_SECRET_KEY`、`COS_BUCKET`、`COS_REGION`（可选，默认 `ap-guangzhou`）。
   未配置 COS 凭证时仅执行构建，部署自动跳过。
@@ -55,6 +57,17 @@ npm run preview  # 预览构建产物
 > - 对象存储 / 本地静态托管
 >
 > 只要将 `dist/` 目录整体上传到静态托管服务的根即可正常访问。
+
+### 分享页的站点地址（SITE_URL）
+
+分享页中的 `og:url` / `twitter:player` 等 meta 标签需要**绝对 URL** 才能让
+X(Twitter) 等平台正确解析播放器卡片。可通过以下方式配置：
+
+1. **流水线环境变量 `SITE_URL`**（推荐）：在 CNB 流水线设置中配置站点公网地址，
+   例如 `https://hu-chenfeng.example.com`
+2. **自动推导**：若配置了 `COS_BUCKET`，流水线会用 `https://<bucket>/` 自动推导
+3. **运行时自动补齐**：未配置 `SITE_URL` 时，分享页在浏览器打开时
+   会用 `location` 自动将相对路径补齐为绝对地址（部分爬虫可能无法识别）
 
 ## 📝 如何新增一条摘录
 
@@ -83,6 +96,10 @@ links:                           # 外链列表（可选）
 
 > `source` 路径对应 `reference/hu-chenfeng` submodule 内的文件，便于追溯完整上下文。
 
+新增文件后，`npm run build` 会自动：
+- 前端 SPA 汇总展示该选读
+- **自动生成**对应的分享页 `dist/选读/<id>.html`
+
 ## ✍️ 通过 Issue 提交新选读
 
 若不想直接改代码，可通过仓库的 **「提交新选读」** Issue 模板提交，自动生成 PR：
@@ -108,6 +125,21 @@ links:                           # 外链列表（可选）
 - **外链 URL**：填写 `https://...` 外链，原样保留
 - **仓库内路径**：填写如 `public/audio/quotes/xxx.mp3`，自动转成站点资源路径
 
+## 🔗 分享选读
+
+每条选读详情页都有一个「复制分享链接」按钮。点击后会把当前选读的
+**独立分享页 URL**（形如 `https://<site>/选读/<id>.html`）复制到剪贴板，
+可直接粘贴到 X(Twitter)、微博、B 站等平台。
+
+分享页特点：
+
+- **标题**展示清晰：`og:title` = 选读标题
+- **X(Twitter) 可点播**：带音频的选读使用 `twitter:card=player`，
+  X 预览卡片中可直接点击播放
+- **全平台预览**：无音频的选读使用 `twitter:card=summary`，显示标题 + 摘要
+- **页面内兜底播放器**：浏览器直接打开分享页时，有原生 `<audio controls>` 可播放
+- **静默降级**：某条选读没有音频时不生成音频 meta 和播放器，分享页仅展示标题与正文
+
 ## 🎵 背景音乐（BGM）
 
 右下角悬浮迷你播放器支持从几首静态 BGM 中任选一首循环播放。曲目配置在
@@ -121,6 +153,8 @@ links:                           # 外链列表（可选）
 ```
 ├── index.html                  # Vite 入口 HTML
 ├── vite.config.js              # Vite 配置
+├── scripts/
+│   └── gen-share-pages.mjs     # 分享页生成器（Node.js，读取 essence md 生成独立 HTML）
 ├── reference/                  # 参考资源库（不参与网页展示）
 │   ├── HuChenFeng-main.zip     # 户晨风全集文字稿压缩包（不解包读取）
 │   ├── lib/                    # JS 读取 API（readFile/readLine/全文迭代器）
@@ -140,7 +174,7 @@ links:                           # 外链列表（可选）
 │   └── components/
 │       ├── Masthead.vue        # 页头
 │       ├── Toc.vue             # 选读：摘录列表 + 实时检索
-│       ├── Entry.vue           # 选读：详情（文本 + 多媒体）
+│       ├── Entry.vue           # 选读：详情（文本 + 多媒体 + 分享）
 │       ├── Viewpoints.vue      # 观点栏目（重要观点列表）
 │       ├── Quotes.vue          # 语录栏目（语录小文章）
 │       ├── Gallery.vue         # 展厅栏目（图像资料 + 大图灯箱）
