@@ -1,6 +1,7 @@
 <script setup>
 import { ref, computed, onMounted, watch } from "vue";
 import { renderMarkdown } from "../data/lib/md-render.js";
+import { splitThemes } from "../data/lib/tags.js";
 import Waveform from "./Waveform.vue";
 
 const props = defineProps({
@@ -10,6 +11,9 @@ const emit = defineEmits(["back", "search"]);
 
 const videoLoaded = ref(false);
 const videoEl = ref(null);
+
+// theme 字段可含多个标签（用空格/顿号/、/ 分隔），逐一渲染为可点击胶囊
+const themes = computed(() => splitThemes(props.quote.theme));
 
 // 正文以 Markdown 渲染，保留换行与段落格式（而非纯文本压成一块）
 const textHtml = computed(() => renderMarkdown(props.quote.text));
@@ -54,13 +58,16 @@ onMounted(() => {
   <article class="entry">
     <div class="entry-meta">
       <time>{{ fmtDate(quote.date) }}</time>
-      <button
-        v-if="quote.theme"
-        class="theme"
-        type="button"
-        :title="'搜索所有「' + quote.theme + '」语录'"
-        @click="emit('search', quote.theme)"
-      >{{ quote.theme }}</button>
+      <span v-if="themes.length" class="theme-list">
+        <button
+          v-for="(t, ti) in themes"
+          :key="ti"
+          class="theme"
+          type="button"
+          :title="'搜索所有「' + t + '」语录'"
+          @click="emit('search', t)"
+        >{{ t }}</button>
+      </span>
     </div>
 
     <h2 v-if="quote.title" class="entry-title">{{ quote.title }}</h2>

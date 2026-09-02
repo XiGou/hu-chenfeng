@@ -12,7 +12,7 @@ front-matter + 正文」的易读格式。`src/data/essence.js` 会通过
 id: 1                      # 必填 · 数字 id（唯一、升序）
 title: 关于人生节奏的一段话  # 可选 · 简短标题（列表/详情页突出展示；也用作音频文件名）
 date: 2025-01-14           # 可选 · 直播日期 YYYY-MM-DD
-theme: 节奏                # 可选 · 主题标签
+theme: 节奏                # 可选 · 主题标签（可含多个，用空格/、/、/等分隔）
 source: reference/hu-chenfeng/2025年01月/2025-01-14.md  # 可选 · 原始出处
 audio: audio/quotes/2025-01-14.mp3  # 可选 · 站点音频资源路径（相对 public，勿带 public/ 前缀）
 video: https://...         # 可选 · 外链视频
@@ -27,6 +27,11 @@ links:                     # 可选 · 外链列表
 - **front-matter** 中的 `#` 为注释，`audio`/`video` 仅保留单行值。
 - `title` 为可选的简短标题：前端「选读」列表主要展示标题（点进去才展示完整正文），
   无 `title` 时列表回退展示正文；提交选读时也会用标题清洗后作为音频基础文件名。
+- `theme` 为主题标签，可填**一个或多个**；多个时用「空格」「/」「、」等任一分隔符隔开，
+  前端会渲染成多个独立 tag 并支持点按检索。例如：
+  - 一个：`theme: 节奏`
+  - 两个：`theme: 小地方 / 大城市`
+  - 也可写作：`theme: 小地方 大城市` 或 `theme: 经济、现实`
 - `audio` 一律填**相对 `public/` 的仓库内资源路径**（如 `audio/quotes/xx.mp3`）；
   构建时会自动拼接站点 `BASE_URL`。**不允许**以 `http(s)://` 外链形式保留，
   外链音频须先下载并 commit 进 `public/audio/quotes/`。
