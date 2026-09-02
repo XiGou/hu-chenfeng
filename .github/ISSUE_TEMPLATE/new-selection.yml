@@ -19,31 +19,13 @@ body:
       required: true
 
   - type: input
-    id: date
-    attributes:
-      label: 直播日期
-      description: 出处对应直播的日期，格式 YYYY-MM-DD
-      placeholder: 例如：2025-01-14
-    validations:
-      required: true
-
-  - type: dropdown
     id: theme
     attributes:
       label: 主题 tag
-      description: 选择最贴切的主题标签
-      multiple: false
-      options:
-        - 节奏
-        - 经济
-        - 现实
-        - 价值观
-        - 认知
-        - 自述
-        - 幸存者偏差
-        - 意义
-        - 职业
-        - 其他
+      description: >-
+        填写主题标签。可直接使用常用值（节奏、经济、现实、价值观、认知、自述、
+        幸存者偏差、意义、职业、其他），也可以自定义任意主题词。
+      placeholder: 例如：节奏（常用标签见描述）
     validations:
       required: true
 

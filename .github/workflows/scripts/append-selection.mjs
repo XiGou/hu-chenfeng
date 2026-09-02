@@ -43,7 +43,6 @@ function parseSections(raw) {
 
 const sec = parseSections(body);
 const title = sec['标题'] || '';
-const date = sec['直播日期'] || '';
 const theme = sec['主题 tag'] || '其他';
 const text = sec['正文文本'] || '';
 const source = sec['原始出处'] || '';
@@ -165,8 +164,8 @@ async function resolveAudio(raw, baseName) {
   return { template: true, value: `${BASE_VAR}${p}` };
 }
 
-// 音频默认文件名：优先用直播日期，回退用 id
-const audioBaseName = date || `selection-${newId}`;
+// 音频默认文件名：用 id 作为基础名
+const audioBaseName = `selection-${newId}`;
 const audio = await resolveAudio(audioRaw, audioBaseName);
 
 // ================= 生成对象字面量 =================
@@ -179,7 +178,6 @@ const prop = (k, v, isStr = true, comma = true) => {
 };
 
 prop('id', newId, false);
-if (date) prop('date', date);
 if (theme) prop('theme', theme);
 prop('text', text);
 if (source) prop('source', source);
