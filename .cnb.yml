@@ -9,9 +9,15 @@
 #   4. 同步代码 —— 将代码自动推送到 GitHub 同名仓库（XiGou/hu-chenfeng）
 #
 # 【站点地址 SITE_URL】
-#   本流水线为 CF Pages / COS 部署注入 SITE_URL=https://hu-chenfeng.19960312.xyz，
-#   使分享页 og:url / og:image / og:audio 在构建期直接烘成绝对 https
+#   `npm run build` 通过 `process.env.SITE_URL` 读取环境变量，将分享页
+#   og:url / og:image / og:audio 在构建期烘成绝对 https
 #   （X/Twitter/微信等爬虫不执行 JS，需要绝对地址才能出预览卡片）。
+#   建议在各部署平台按其配置方式注入 SITE_URL，而非在本流水线中硬编码：
+#   - CNB 流水线：在「仓库设置 → 流水线环境变量」配置 SITE_URL，或在本文件
+#     imports 的密钥文件中声明 SITE_URL
+#   - GitHub Actions（.github/workflows/deploy.yml）：env 注入
+#   - Cloudflare Pages：在 CF 构建设置中配置 SITE_URL 环境变量
+#   未配置 SITE_URL 时产物保持域名无关（og meta 走相对路径 + 运行时 location 补齐）。
 #   og:url 使用不带 .html 后缀的干净地址，避免 CF 对 .html 走 308 重定向。
 #
 # 【COS 部署说明】
@@ -41,9 +47,6 @@ main:
         image: node:20
       imports:
         - https://cnb.cool/gotham-xigou/secret-env/-/blob/main/secret-env.yml
-      env:
-        # CF Pages / COS 公网域名（构建期烘成绝对 https）
-        SITE_URL: https://hu-chenfeng.19960312.xyz
       stages:
         # ---- 构建 ----
         - name: 安装依赖并构建
@@ -64,11 +67,16 @@ main:
             npm ci
 
             echo "==> 确认站点绝对地址（供分享页 og/twitter meta 使用）"
-            # SITE_URL 由流水线 env 注入（CF Pages / COS 公网域名）
+            # SITE_URL 由各部署平台环境变量注入（CNB 流水线 env / GitHub Actions env / CF Pages env）。
+            # 未配置 SITE_URL 但配了 COS_BUCKET 时，从 COS_BUCKET 推导。
+            # 均未配置时产物保持域名无关（相对路径 + 运行时补齐）。
             if [ -n "$SITE_URL" ]; then
               echo "    使用 SITE_URL=$SITE_URL（构建期烘成绝对 https）"
+            elif [ -n "$COS_BUCKET" ]; then
+              export SITE_URL="https://${COS_BUCKET}"
+              echo "    使用 COS_BUCKET 推导 SITE_URL=$SITE_URL"
             else
-              echo "    [警告] 未配置 SITE_URL——og meta 将走相对路径，X 爬虫不出预览卡！"
+              echo "    未配置 SITE_URL/COS_BUCKET——og meta 走相对路径，X 爬虫不出预览卡！"
             fi
 
             echo "==> Vite 生产构建（含分享页生成）"
