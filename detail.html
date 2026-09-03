@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#ffffff" />
+    <!-- 每条选读的 og / twitter meta 由构建期按 id 注入；此模板仅占位 -->
+    <title>户晨风 · 选读</title>
+    <link id="favicon" rel="icon" type="image/svg+xml" href="./favicons/apple.svg" />
+    <!-- og meta 注入锚点 -->
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="module" src="./src/main/detail.js"></script>
+    <script>
+      // 状态栏缩略图：每次刷新在苹果/特斯拉/山姆之间随机出现
+      (function () {
+        var logos = ["apple", "tesla", "sam"];
+        var pick = logos[Math.floor(Math.random() * logos.length)];
+        var link = document.getElementById("favicon");
+        if (link) {
+          link.setAttribute("href", "./favicons/" + pick + ".svg");
+        }
+      })();
+    </script>
+  </body>
+</html>
+    <script>
+      // 无 SITE_URL 时：构建期 og 只烘成页面相对地址（../）。此处运行时用当前
+      // 页面目录将相对 og:url / og:audio / og:image 补齐为绝对 https。
+      // （对不执行 JS 的爬虫无效 —— 生产务必在构建期配 SITE_URL）
+      (function () {
+        var ogUrl = document.querySelector('meta[property="og:url"]');
+        if (ogUrl && ogUrl.content.indexOf("://") >= 0) return; // 已是绝对
+        // og:url 为站点根相对 canonical（选读/<id>），保持干净不补全；
+        // 仅把 og:audio / og:image 的页面相对 ../ 地址按当前页目录补齐绝对 https。
+        var pageDir = location.href.slice(0, location.href.lastIndexOf("/") + 1);
+        var patch = function (sel) {
+          var el = document.querySelector(sel);
+          if (el && el.content && el.content.indexOf("://") < 0) {
+            el.content = new URL(el.content, pageDir).toString();
+          }
+        };
+        patch('meta[property="og:audio"]');
+        patch('meta[property="og:audio:secure_url"]');
+        patch('meta[property="og:image"]');
+        patch('meta[property="og:image:secure_url"]');
+      })();
+    </script>
