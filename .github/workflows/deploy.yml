@@ -38,10 +38,9 @@ jobs:
   # 1. 构建：使用 Vite 打包生成静态产物
   build:
     runs-on: ubuntu-latest
-    # 产物保持域名无关：不写死 SITE_URL，同一份 dist 可同时部署到
-    # GitHub Pages / Cloudflare Pages 等任意域名。og meta 走相对路径，
-    # 页面运行时用 location 自动补齐。如需绝对 https 供 X 爬虫出预览卡，
-    # 可在 GitHub Actions Secrets 配置 SITE_URL 环境变量显式注入。
+    # GitHub Pages 独立构建 → 注入本部署专属的 SITE_URL，让 og:url/og:image/og:audio
+    # 在构建期直接烘成绝对 https（X/Twitter/微信等爬虫不执行 JS，需要绝对地址出预览卡）。
+    # 本仓库 GitHub Pages 站点部署在 https://xigou.github.io/hu-chenfeng 子路径下。
     steps:
       - name: 检出代码
         uses: actions/checkout@v4
@@ -60,6 +59,9 @@ jobs:
 
       - name: Vite 构建
         run: npm run build
+        env:
+          # GitHub Pages 独立部署域名（子路径 /hu-chenfeng/）
+          SITE_URL: https://xigou.github.io/hu-chenfeng
 
       - name: 配置 GitHub Pages
         uses: actions/configure-pages@v5
