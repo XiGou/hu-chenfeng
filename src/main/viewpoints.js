@@ -8,7 +8,7 @@ import "../styles/main.css";
 const el = document.querySelector("#app");
 if (!el) throw new Error("#app 元素缺失");
 if (el.children.length) {
-  createSSRApp(ViewpointsPage).hydrate(el);
+  createSSRApp(ViewpointsPage).mount(el);
 } else {
   createApp(ViewpointsPage).mount(el);
 }

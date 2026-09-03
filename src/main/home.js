@@ -11,7 +11,7 @@ const mount = () => {
   const el = document.querySelector("#app");
   if (!el) return;
   if (el.children.length) {
-    createSSRApp(HomePage).hydrate(el);
+    createSSRApp(HomePage).mount(el);
   } else {
     createApp(HomePage).mount(el);
   }
