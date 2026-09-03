@@ -238,7 +238,7 @@ function pickGalleryIndex(seed, len) {
 
 /** 生成单条分享页 HTML 字符串 */
 function buildShareHtml(item) {
-  const { id, title = '', date = '', theme = '', source = '', audio = '', text = '', video = '', links = [] } = item;
+  const { id, title = '', date = '', theme = '', source = '', note = '', audio = '', text = '', video = '', links = [] } = item;
 
   const themes = splitThemes(theme);
   const body = renderMarkdown(text);
@@ -433,6 +433,36 @@ function buildShareHtml(item) {
       color: #111;
       letter-spacing: -0.01em;
     }
+    /* 编者批注 */
+    .editor-note {
+      margin: 0 0 24px;
+      padding: 12px 16px;
+      background: #faf8f2;
+      border: 1px solid #efe7d3;
+      border-left: 3px solid #c9b458;
+      border-radius: 8px;
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+    }
+    .editor-note-mark {
+      flex: 0 0 auto;
+      font-size: 12px;
+      color: #8a7a3a;
+      border: 1px solid #e0d3a8;
+      background: #fff;
+      border-radius: 999px;
+      padding: 1px 10px;
+      margin-top: 3px;
+      letter-spacing: 0.05em;
+      white-space: nowrap;
+    }
+    .editor-note p {
+      margin: 0;
+      font-size: 14px;
+      color: #6b5f3a;
+      line-height: 1.7;
+    }
     /* 展厅预览图 */
     .preview {
       margin: 4px 0 24px;
@@ -596,6 +626,12 @@ function buildShareHtml(item) {
     </div>
 
     <h1>${escHtml(displayTitle)}</h1>
+
+    ${note ? `
+    <div class="editor-note" role="note">
+      <span class="editor-note-mark">编者注</span>
+      <p>${escHtml(note)}</p>
+    </div>` : ''}
 
     ${imageRelUrl ? `
     <figure class="preview">
