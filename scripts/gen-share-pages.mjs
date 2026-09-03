@@ -38,7 +38,10 @@ const ROOT = path.resolve(__dirname, '..');
 const ESSENCE_DIR = process.env.ESSENCE_DIR || path.join(ROOT, 'src/data/essence');
 const OUT_DIR = process.env.OUT_DIR || path.join(ROOT, 'dist');
 // 站点绝对基址（可选）。若为空，页面运行时用 location 补齐。
-const SITE_URL = (process.env.SITE_URL || '').trim().replace(/\/+$/, '');
+// 注意：X/Twitter 等平台爬虫不执行 JS，og:url/og:image/og:audio 必须烘成绝对 https 才能出预览卡片。
+// 因此当未显式配置 SITE_URL 时，默认回退到生产站点域名（可用环境变量 SITE_URL 覆盖，便于复用部署到其它域名/子路径）。
+const _DEFAULT_SITE = 'https://hu-chenfeng.19960312.xyz';
+const SITE_URL = (process.env.SITE_URL || _DEFAULT_SITE).trim().replace(/\/+$/, '');
 // 分享页目录名：路径形如 站点/选读/1.html
 const DIR_NAME = '选读';
 // 复用仓库的 front-matter 解析器（纯函数）

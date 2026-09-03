@@ -38,6 +38,10 @@ jobs:
   # 1. 构建：使用 Vite 打包生成静态产物
   build:
     runs-on: ubuntu-latest
+    # 生产站点绝对地址：让分享页 og:url/og:image/og:audio 烘成绝对 https。
+    # X/Twitter 爬虫不执行 JS，不配会退化成相对路径而无法出预览卡片。
+    env:
+      SITE_URL: https://hu-chenfeng.19960312.xyz
     steps:
       - name: 检出代码
         uses: actions/checkout@v4
