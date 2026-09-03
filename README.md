@@ -45,7 +45,7 @@ npm run preview  # 预览构建产物
 - **公网部署**：将 `dist/` 静态产物同步到腾讯云 COS 对象存储
 
 > **路径兼容**：构建产物中的页面资源（JS / CSS / 音频 / BGM）均使用**相对路径**引用（`vite.config.js` 中 `base: "./"`），资源文件可适配任意部署位置。
-> 但分享页 **og meta 在构建期由各自 CI 注入 `SITE_URL` 烘成绝对 https**（GitHub Pages 用 `https://xigou.github.io/hu-chenfeng`，CF/COS 用 `https://hu-chenfeng.19960312.xyz`），保证 X/Twitter 等爬虫能正确出预览卡片。
+> 分享页 **og meta 通过读取 `SITE_URL` 环境变量**在构建期烘成绝对 https（各部署平台在自身 CI 设置中配置，GitHub Pages 用 `https://xigou.github.io/hu-chenfeng`，CF/COS 用 `https://hu-chenfeng.19960312.xyz`），保证 X/Twitter 等爬虫能正确出预览卡片。未配置时产物保持域名无关，og meta 走相对路径。
 > `og:url` 使用不带 `.html` 后缀的 **canonical 干净地址**（如 `/选读/1`），GitHub Pages 与 Cloudflare 均支持无后缀路径解析到对应 `.html`，同时避免 CF 对 `.html` 走 308 重定向。
 
 ## 📁 项目结构
