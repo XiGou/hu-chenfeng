@@ -41,7 +41,7 @@ npm run preview  # 预览构建产物
 
 通过根目录 `.cnb.yml` 流水线，push 到 `main` 分支自动构建并部署：
 
-- **构建**：`vite build` → `pre-render.mjs`（SSR 预渲染）→ `gen-quote-videos` → `gen-share-pages`
+- **构建**：`vite build` → `pre-render.mjs`（SSR 预渲染）→ `gen-quote-videos` → `gen-og-cards` → `gen-share-pages`
 - **公网部署**：将 `dist/` 静态产物同步到腾讯云 COS 对象存储
 
 > **路径兼容**：构建产物中的资源（JS / CSS / 音频 / BGM）均使用**相对路径**引用（`vite.config.js` 中 `base: "./"`），`dist/` 可部署到任意位置（GitHub Pages 子路径 / COS / Cloudflare Pages）。
@@ -56,6 +56,7 @@ npm run preview  # 预览构建产物
 ├── vite.config.js              # Vite 配置（MPA 多入口）
 ├── scripts/
 │   ├── pre-render.mjs          # SSR 预渲染脚本（生成全量静态 HTML）
+│   ├── gen-og-cards.mjs       # og:image 社交卡片生成器（1200×630）
 │   ├── gen-share-pages.mjs     # 选读详情页生成器
 │   └── gen-quote-videos.mjs    # ffmpeg 合成视频
 ├── src/
