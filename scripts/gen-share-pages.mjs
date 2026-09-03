@@ -8,11 +8,14 @@
  * 复制地址栏即可分享，无需单独维护“给 X 用的分享页”）。页面内嵌：
  *   - OG / Twitter Card meta：og:title/description/audio，以及 og:image/twitter:image
  *     —— 预览图从 public/gallery/ 里按选读 id 确定性随机任选一张；
- *   - Twitter 卡片用 summary_large_image（X 无需白名单即可稳定出“大图+标题”预览，
- *     og:audio 直链让支持音频的平台可直接点播；twitter:card=player 需 X 白名单，故不使用）
- *   - og:video / twitter:player 直链：若构建阶段已由 scripts/gen-quote-videos.mjs 为该条选读
- *     用 ffmpeg 合成 dist/videos/quotes/<id>.mp4（同封面 gallery 图 + 音频），则附加视频直链，
- *     供支持视频内嵌预览的平台（如 X、部分 IM / 社交）展示；网页内仍用纯 <audio> 播放、不嵌视频。
+ *   - OG / Twitter Card meta 说明：X/Twitter 本身**没有音频卡片**，og:audio 只能让其它
+ *     支持音频的平台（如部分 IM / 社交）直接点播，X 不会因此给出可点击播放的媒体；
+ *     要让 X 在时间线里“点一下就能播”，只能以视频形式（静帧 gallery 图 + 音频）呈现，
+ *     因此脚本会优先基于是否有视频直链决定 twitter:card：
+ *       · 有视频直链（scripts/gen-quote-videos.mjs 已合成 dist/videos/quotes/<id>.mp4）→
+ *         twitter:card=player + twitter:player:stream，X 可内联播放该“图+音”视频；
+ *       · 无视频 → 退回 summary_large_image / summary 大图/摘要卡。
+ *     og:image 预览图从 public/gallery/ 里按选读 id 确定性随机任选一张。
  *   - 波形播放器（基于 Wavesurfer.js v7，含波形 + 播放/暂停 + 点按跳转 + 播放着色进度，
  *     无 JS 时自动回退为原生 <audio controls>）+ 展厅预览图 + 标题/日期/主题/正文（含 video/links 媒体）
  *   - 分享操作条：底部「复制链接」（复制无 .html 的 canonical 干净地址）与「分享到 X」
@@ -338,6 +341,14 @@ function buildShareHtml(item) {
       ? `${SITE_URL}/${videoSitePath}`.replace(/([^:])\/+/g, '$1/')
       : relRoot + '/' + videoSitePath; // 无 SITE_URL 用相对本页，运行时 JS 补齐
   }
+  // twitter:card —— 有视频直链时用 player 卡（配合 twitter:player:stream，
+  // X 会在时间线里直接给出可点播放的视频预览，即可点播“图 + 音频/视频”）；无视频再退而求其次：
+  // 有大图用 summary_large_image，否则 summary。og:audio 本身 X 不出音频卡，无法点播。
+  // 注意：twitter:card=player 需先将站点域名在 X(Twitter) 开发者平台提交/校验（player 卡白名单），
+  // 否则 X 可能回退到摘要卡或不出图。见 scripts/gen-quote-videos.mjs 生成的 videos/quotes/<id>.mp4。
+  const twitterCardType = videoAbsUrl
+    ? 'player'
+    : (imageAbsUrl ? 'summary_large_image' : 'summary');
 
   return `<!DOCTYPE html>
 <html lang="zh-CN">
@@ -373,14 +384,13 @@ function buildShareHtml(item) {
   <meta property="og:video:height" content="720">` : ''}
 
   <!-- ======== Twitter / X Card ======== -->
-  ${imageAbsUrl ? `
-  <meta name="twitter:card" content="summary_large_image">
+  <!-- twitter:card 由 twitterCardType 决定：有视频直链→player（可点播），否则大图/摘要卡。
+       三种情况下都带上 title/description；有图时带 twitter:image 作 player 卡封面。 -->
+  <meta name="twitter:card" content="${twitterCardType}">
   <meta name="twitter:title" content="${escHtml(displayTitle)}">
   <meta name="twitter:description" content="${escHtml(description)}">
-  <meta name="twitter:image" content="${escHtml(imageAbsUrl)}">` : `
-  <meta name="twitter:card" content="summary">
-  <meta name="twitter:title" content="${escHtml(displayTitle)}">
-  <meta name="twitter:description" content="${escHtml(description)}">`}
+  ${imageAbsUrl ? `
+  <meta name="twitter:image" content="${escHtml(imageAbsUrl)}">` : ''}
   ${videoAbsUrl ? `
   <meta name="twitter:player" content="${escHtml(videoAbsUrl)}">
   <meta name="twitter:player:stream" content="${escHtml(videoAbsUrl)}">
