@@ -10,6 +10,9 @@
  *     —— 预览图从 public/gallery/ 里按选读 id 确定性随机任选一张；
  *   - Twitter 卡片用 summary_large_image（X 无需白名单即可稳定出“大图+标题”预览，
  *     og:audio 直链让支持音频的平台可直接点播；twitter:card=player 需 X 白名单，故不使用）
+ *   - og:video / twitter:player 直链：若构建阶段已由 scripts/gen-quote-videos.mjs 为该条选读
+ *     用 ffmpeg 合成 dist/videos/quotes/<id>.mp4（同封面 gallery 图 + 音频），则附加视频直链，
+ *     供支持视频内嵌预览的平台（如 X、部分 IM / 社交）展示；网页内仍用纯 <audio> 播放、不嵌视频。
  *   - 原生 <audio controls> 播放器 + 展厅预览图 + 标题/日期/主题/正文（含 video/links 媒体）
  *
  * 另外会给首页 dist/index.html 补写基础 OG/Twitter meta（含一张 gallery 预览图），
@@ -246,6 +249,12 @@ function buildShareHtml(item) {
   const shareFile = path.join(OUT_DIR, DIR_NAME, `${id}.html`);
   const relRoot = relToDist(shareFile); // 从分享页 → dist/ 的相对路径
 
+  // 视频（og:video）：若构建阶段已由 scripts/gen-quote-videos.mjs 为该 id 合成
+  // dist/videos/quotes/<id>.mp4，则此处带上 og:video 直链，供支持视频预览的平台展示
+  //（网页内仍用纯 <audio> 播放，不在页面里 <video>；封面沿用 gallery 预览图）。
+  const quoteVideoFile = path.join(OUT_DIR, 'videos', 'quotes', `${id}.mp4`);
+  const hasVideo = fs.existsSync(quoteVideoFile);
+
   // 音频：分「外链URL」「仓库资源（相对 public/，构建后位于 dist/ 根）」两种情况
   const audioClean = cleanAudioPath(audio);
   let audioUrl = '';      // 页面内 <audio> 的 src（相对本页）
@@ -295,8 +304,8 @@ function buildShareHtml(item) {
 
   const themesAttr = themeHtml ? `<div class="tags">${themeHtml}</div>` : '';
 
-  // og:type —— 有音频用 music.song，无音频用 article
-  const ogType = audioAbsUrl ? 'music.song' : 'article';
+  // og:type —— 有视频用 video.other（供视频预览）；否则有音频用 music.song；再否则 article
+  const ogType = hasVideo ? 'video.other' : (audioAbsUrl ? 'music.song' : 'article');
 
   // 展厅预览图（og:image）：每个页面从 gallery 里确定性随机任选一张
   const galleryImages = getGalleryImages();
@@ -312,6 +321,15 @@ function buildShareHtml(item) {
     imageAbsUrl = SITE_URL
       ? `${SITE_URL}/${imageSitePath}`.replace(/([^:])\/+/g, '$1/')
       : imageRelUrl;
+  }
+
+  // 视频直链（og:video）：站点相对路径 videos/quotes/<id>.mp4，配 SITE_URL 烘成绝对 https
+  const videoSitePath = `videos/quotes/${id}.mp4`;
+  let videoAbsUrl = '';
+  if (hasVideo) {
+    videoAbsUrl = SITE_URL
+      ? `${SITE_URL}/${videoSitePath}`.replace(/([^:])\/+/g, '$1/')
+      : relRoot + '/' + videoSitePath; // 无 SITE_URL 用相对本页，运行时 JS 补齐
   }
 
   return `<!DOCTYPE html>
@@ -338,6 +356,12 @@ function buildShareHtml(item) {
   <meta property="og:image" content="${escHtml(imageAbsUrl)}">
   <meta property="og:image:secure_url" content="${escHtml(imageAbsUrl)}">
   <meta property="og:image:alt" content="${escHtml(displayTitle)}">` : ''}
+  ${videoAbsUrl ? `
+  <meta property="og:video" content="${escHtml(videoAbsUrl)}">
+  <meta property="og:video:secure_url" content="${escHtml(videoAbsUrl)}">
+  <meta property="og:video:type" content="video/mp4">
+  <meta property="og:video:width" content="1280">
+  <meta property="og:video:height" content="720">` : ''}
 
   <!-- ======== Twitter / X Card ======== -->
   ${imageAbsUrl ? `
@@ -348,6 +372,12 @@ function buildShareHtml(item) {
   <meta name="twitter:card" content="summary">
   <meta name="twitter:title" content="${escHtml(displayTitle)}">
   <meta name="twitter:description" content="${escHtml(description)}">`}
+  ${videoAbsUrl ? `
+  <meta name="twitter:player" content="${escHtml(videoAbsUrl)}">
+  <meta name="twitter:player:stream" content="${escHtml(videoAbsUrl)}">
+  <meta name="twitter:player:stream:type" content="video/mp4">
+  <meta name="twitter:player:width" content="1280">
+  <meta name="twitter:player:height" content="720">` : ''}
 
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -584,6 +614,11 @@ function buildShareHtml(item) {
       patch('meta[property="og:audio:secure_url"]', pageDir);
       patch('meta[property="og:image"]', pageDir);
       patch('meta[property="og:image:secure_url"]', pageDir);
+      // og:video / twitter:player —— 相对当前页目录（如 ../videos/quotes/<id>.mp4）
+      patch('meta[property="og:video"]', pageDir);
+      patch('meta[property="og:video:secure_url"]', pageDir);
+      patch('meta[name="twitter:player"]', pageDir);
+      patch('meta[name="twitter:player:stream"]', pageDir);
     })();
   </script>
 </body>
