@@ -9,20 +9,9 @@
  *   - OG / Twitter Card meta：og:title/description/audio，以及 og:image/twitter:image
  *     —— og:image 优先用 scripts/gen-og-cards.mjs 生成的 1200×630 标准社交卡片
  *       （dist/og-cards/<id>.png，含标题文字），无则退化为按选读 id 确定性挑选的 gallery 图；
- *   - OG / Twitter Card meta 说明：X/Twitter 本身**没有音频卡片**，og:audio 只能让其它
- *     支持音频的平台（如部分 IM / 社交）直接点播，X 不会因此给出可点击播放的媒体；
- *     要让 X 在时间线里“点一下就能播”，只能以视频形式（静帧 gallery 图 + 音频）呈现，
- *     因此脚本会优先基于是否有视频直链决定 twitter:card：
- *       · 有视频直链（scripts/gen-quote-videos.mjs 已合成 dist/videos/quotes/<id>.mp4）→
- *         twitter:card=player + twitter:player:stream，X 可内联播放该“图+音”视频；
- *       · 无视频 → 退回 summary_large_image / summary 大图/摘要卡。
- *   - og:video / twitter:player 直链：若构建阶段已由 scripts/gen-quote-videos.mjs 为该条选读
- *     用 ffmpeg 合成 dist/videos/quotes/<id>.mp4（同封面 gallery 图 + 音频），则附加视频直链，
- *     供支持视频内嵌预览的平台（如 X、部分 IM / 社交）展示；网页内仍用纯 <audio> 播放、不嵌视频。
- *     视频类 meta 与 og:audio / og:image 一样用「相对本页目录」的路径（如 ../videos/quotes/<id>.mp4），
- *     配 SITE_URL 时烘成绝对 https；未配置时保持域名无关、由运行时以当前页面所在子路径补齐 ——
- *     这样同一份 dist 无论部署到 COS、GitHub Pages 子路径还是其它站点都能正确解析（不写死站点根 / 路径，
- *     避免在 GitHub Pages 子路径部署下被解析到域名根而丢失子路径前缀）。
+ *     分享预览统一用「图片 + 标题」的大图/摘要卡（summary_large_image / summary），
+ *     不再合成 og:video / twitter:player 视频（X/Twitter 需要的 player 卡存在子路径部署与
+ *     域名白名单等问题，故取消全部视频构建路径，只保留图片与标题预览）。
  *   - 波形播放器（基于 Wavesurfer.js v7，含波形 + 播放/暂停 + 点按跳转 + 播放着色进度，
  *     无 JS 时自动回退为原生 <audio controls>）+ 展厅预览图 + 标题/日期/主题/正文（含 video/links 媒体）
  *   - 分享操作条：底部「复制链接」（复制无 .html 的 canonical 干净地址）与「分享到 X」
@@ -279,12 +268,6 @@ function buildShareHtml(item) {
   // 波形播放器（Wavesurfer）ESM 的相对路径：从分享页 → dist/vendor/wavesurfer.esm.js
   const waveModuleRel = relRoot + '/vendor/wavesurfer.esm.js';
 
-  // 视频（og:video）：若构建阶段已由 scripts/gen-quote-videos.mjs 为该 id 合成
-  // dist/videos/quotes/<id>.mp4，则此处带上 og:video 直链，供支持视频预览的平台展示
-  //（网页内仍用纯 <audio> 播放，不在页面里 <video>；封面沿用 gallery 预览图）。
-  const quoteVideoFile = path.join(OUT_DIR, 'videos', 'quotes', `${id}.mp4`);
-  const hasVideo = fs.existsSync(quoteVideoFile);
-
   // 音频：分「外链URL」「仓库资源（相对 public/，构建后位于 dist/ 根）」两种情况
   const audioClean = cleanAudioPath(audio);
   let audioUrl = '';      // 页面内 <audio> 的 src（相对本页）
@@ -336,8 +319,8 @@ function buildShareHtml(item) {
 
   const themesAttr = themeHtml ? `<div class="tags">${themeHtml}</div>` : '';
 
-  // og:type —— 有视频用 video.other（供视频预览）；否则有音频用 music.song；再否则 article
-  const ogType = hasVideo ? 'video.other' : (audioAbsUrl ? 'music.song' : 'article');
+  // og:type —— 有音频用 music.song；否则 article
+  const ogType = audioAbsUrl ? 'music.song' : 'article';
 
   // 展厅预览图（og:image）：每个页面从 gallery 里确定性随机任选一张
   const galleryImages = getGalleryImages();
@@ -369,29 +352,9 @@ function buildShareHtml(item) {
       : ogImageRelUrl;
   }
 
-  // 视频直链（og:video）：站点资源路径 videos/quotes/<id>.mp4。
-  // 视频 meta 必须与 og:audio / og:image 一样用「相对本页目录」的路径（如 ../videos/quotes/<id>.mp4，
-  // 配 SITE_URL 时烘成绝对 https），而**不能**用「/」开头的站点根绝对路径——
-  // 因为站点可能部署在子路径下（如 GitHub Pages 的 https://<user>.github.io/<repo>/），
-  // 根绝对路径会被解析到域名根（丢掉子路径前缀）而失效。相对路径由运行时以当前页面目录补齐，
-  // 既兼容子路径部署，又保留同一份 dist 跨站点（COS / GitHub Pages / CF）复用的域名无关性。
-  const videoSitePath = `videos/quotes/${id}.mp4`;
-  // 站点资源绝对地址（配 SITE_URL）或相对本页目录的相对路径（无 SITE_URL，运行时补齐）
-  const videoRelUrl = relRoot + '/' + videoSitePath; // 相对本页目录，如 ../videos/quotes/<id>.mp4
-  let videoUrl = '';
-  if (hasVideo) {
-    videoUrl = SITE_URL
-      ? `${SITE_URL}/${videoSitePath}`.replace(/([^:])\/+/g, '$1/')
-      : videoRelUrl;
-  }
-  // twitter:card —— 有视频直链时用 player 卡（配合 twitter:player:stream，
-  // X 会在时间线里直接给出可点播放的视频预览，即可点播“图 + 音频/视频”）；无视频再退而求其次：
-  // 有大图用 summary_large_image，否则 summary。og:audio 本身 X 不出音频卡，无法点播。
-  // 注意：twitter:card=player 需先将站点域名在 X(Twitter) 开发者平台提交/校验（player 卡白名单），
-  // 否则 X 可能回退到摘要卡或不出图。见 scripts/gen-quote-videos.mjs 生成的 videos/quotes/<id>.mp4。
-  const twitterCardType = videoUrl
-    ? 'player'
-    : (imageAbsUrl ? 'summary_large_image' : 'summary');
+  // twitter:card —— 不再合成视频，统一用「图片 + 标题」预览：
+  // 有大图用 summary_large_image，否则摘要卡 summary。og:audio 本身 X 不出音频卡。
+  const twitterCardType = imageAbsUrl ? 'summary_large_image' : 'summary';
 
   return `<!DOCTYPE html>
 <html lang="zh-CN">
@@ -423,27 +386,13 @@ function buildShareHtml(item) {
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">` : ''}
   <meta property="og:image:alt" content="${escHtml(displayTitle)}">` : ''}
-  ${videoUrl ? `
-  <meta property="og:video" content="${escHtml(videoUrl)}">
-  <meta property="og:video:secure_url" content="${escHtml(videoUrl)}">
-  <meta property="og:video:type" content="video/mp4">
-  <meta property="og:video:width" content="1280">
-  <meta property="og:video:height" content="720">` : ''}
 
   <!-- ======== Twitter / X Card ======== -->
-  <!-- twitter:card 由 twitterCardType 决定：有视频直链→player（可点播），否则大图/摘要卡。
-       三种情况下都带上 title/description；有图时带 twitter:image 作 player 卡封面。 -->
   <meta name="twitter:card" content="${twitterCardType}">
   <meta name="twitter:title" content="${escHtml(displayTitle)}">
   <meta name="twitter:description" content="${escHtml(description)}">
   ${imageAbsUrl ? `
   <meta name="twitter:image" content="${escHtml(imageAbsUrl)}">` : ''}
-  ${videoUrl ? `
-  <meta name="twitter:player" content="${escHtml(videoUrl)}">
-  <meta name="twitter:player:stream" content="${escHtml(videoUrl)}">
-  <meta name="twitter:player:stream:type" content="video/mp4">
-  <meta name="twitter:player:width" content="1280">
-  <meta name="twitter:player:height" content="720">` : ''}
 
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -789,8 +738,8 @@ function buildShareHtml(item) {
     //（对不执行 JS 的 X 爬虫无效，仅作浏览器/支持渲染的抓取兜底；
     //  生产建议在构建时配置 SITE_URL，让 og:url/og:image 直接烘成绝对 https）。
     // og:url 为「相对站点根的路径」（如 选读/1.html）；
-    // og:audio / og:image / og:video（twitter:player）为「相对本页目录的路径」
-    //（如 ../audio/quotes/x.mp3、../gallery/imgN.png、../videos/quotes/<id>.mp4）。
+    // og:audio / og:image 为「相对本页目录的路径」
+    //（如 ../audio/quotes/x.mp3、../og-cards/<id>.png、../gallery/imgN.png）。
     // 相对路径以当前页面目录补齐，可兼容任意子路径部署（GitHub Pages /hu-chenfeng/ 等）。
     (function () {
       var hasSite = ${SITE_URL ? 'true' : 'false'};
@@ -816,17 +765,12 @@ function buildShareHtml(item) {
       root += '/';
       // og:url —— 相对站点根（如 选读/1.html）
       patch('meta[property="og:url"]', root);
-      // og:audio / og:image / og:video（twitter:player）—— 相对当前页目录的路径
-      //（如 ../audio/...、../gallery/imgN.png、../videos/quotes/<id>.mp4）。以 pageDir 补齐，
+      // og:audio / og:image —— 相对当前页目录的路径。以 pageDir 补齐，
       // 使其跟随「当前页面所在子路径」（兼容 GitHub Pages 子路径 /hu-chenfeng/ 等部署）
       patch('meta[property="og:audio"]', pageDir);
       patch('meta[property="og:audio:secure_url"]', pageDir);
       patch('meta[property="og:image"]', pageDir);
       patch('meta[property="og:image:secure_url"]', pageDir);
-      patch('meta[property="og:video"]', pageDir);
-      patch('meta[property="og:video:secure_url"]', pageDir);
-      patch('meta[name="twitter:player"]', pageDir);
-      patch('meta[name="twitter:player:stream"]', pageDir);
     })();
   </script>
 
