@@ -6,11 +6,10 @@
   "description": "户晨风语录 · Loquitur —— 基于 Vite + Vue 3 的语录集站点",
   "scripts": {
     "dev": "vite",
-    "build": "vite build && node scripts/gen-quote-videos.mjs && node scripts/gen-share-pages.mjs",
+    "build": "vite build && node scripts/pre-render.mjs && node scripts/gen-quote-videos.mjs && node scripts/gen-share-pages.mjs",
     "preview": "vite preview"
   },
   "dependencies": {
-    "@lucide/vue": "^1.39.0",
     "vue": "^3.5.13"
   },
   "devDependencies": {

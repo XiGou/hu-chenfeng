@@ -2,6 +2,8 @@ import { fileURLToPath, URL } from "node:url";
 import { defineConfig } from "vite";
 import vue from "@vitejs/plugin-vue";
 
+const __dirname = fileURLToPath(new URL(".", import.meta.url));
+
 // https://vitejs.dev/config/
 export default defineConfig({
   // 使用相对路径引用资源，兼容任意部署位置：
@@ -22,7 +24,14 @@ export default defineConfig({
     // 让生成物更利于静态部署
     target: "es2018",
     sourcemap: false,
+    // 站彻底 MPA —— 每个栏目独立 URL 页
     rollupOptions: {
+      input: {
+        index: fileURLToPath(new URL("./index.html", import.meta.url)),
+        viewpoints: fileURLToPath(new URL("./viewpoints.html", import.meta.url)),
+        quotations: fileURLToPath(new URL("./quotations.html", import.meta.url)),
+        gallery: fileURLToPath(new URL("./gallery.html", import.meta.url)),
+      },
       output: {
         manualChunks: {
           vendor: ["vue"],

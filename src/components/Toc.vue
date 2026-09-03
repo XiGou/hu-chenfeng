@@ -6,7 +6,6 @@ defineProps({
   total: { type: Number, default: 0 },
   keyword: { type: String, default: "" },
 });
-const emit = defineEmits(["open", "update:keyword"]);
 
 function fmtDate(d) {
   if (!d) return "";
@@ -20,6 +19,11 @@ function itemLabel(q) {
   if (q.title) return q.title;
   const first = String(q.text || "").split("\n").map((s) => s.trim()).filter(Boolean)[0] || "";
   return first;
+}
+
+/** 构造选读详情页的相对 URL：首页(index.html)同目录下的 选读/<id>.html */
+function detailHref(id) {
+  return "./" + encodeURIComponent("选读") + "/" + id + ".html";
 }
 </script>
 
@@ -46,7 +50,7 @@ function itemLabel(q) {
 
     <ul v-else class="item-list">
       <li v-for="q in items" :key="q.id" class="item">
-        <button class="item-btn" type="button" @click="emit('open', q.id)">
+        <a class="item-btn" :href="detailHref(q.id)">
           <span class="item-meta">
             <time>{{ fmtDate(q.date) }}</time>
             <span v-if="splitThemes(q.theme).length" class="item-themes">
@@ -54,7 +58,7 @@ function itemLabel(q) {
             </span>
           </span>
           <span class="item-title">{{ itemLabel(q) }}</span>
-        </button>
+        </a>
       </li>
     </ul>
   </div>

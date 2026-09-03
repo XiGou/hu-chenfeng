@@ -109,8 +109,10 @@ a { color: inherit; }
 }
 .item:last-child { border-bottom: none; }
 
-.item-btn {
+.item-btn, .item-btn:link {
   display: block;
+  text-decoration: none;
+  color: inherit;
   width: 100%;
   text-align: left;
   background: none;
@@ -342,7 +344,8 @@ a { color: inherit; }
   padding-bottom: 1.4rem;
   border-bottom: 1px solid var(--line);
 }
-.section-nav button {
+.section-nav a, .section-nav button {
+  text-decoration: none;
   background: none;
   border: 1px solid var(--line);
   border-radius: 999px;
@@ -353,8 +356,8 @@ a { color: inherit; }
   cursor: pointer;
   transition: all 0.2s ease;
 }
-.section-nav button:hover { color: var(--fg); border-color: var(--fg-faint); }
-.section-nav button.active {
+.section-nav a:hover, .section-nav button:hover { color: var(--fg); border-color: var(--fg-faint); }
+.section-nav a.active, .section-nav button.active {
   color: #fff;
   background: var(--accent);
   border-color: var(--accent);

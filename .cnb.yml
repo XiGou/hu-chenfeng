@@ -75,7 +75,7 @@ main:
             npm run build
 
             echo "==> 校验构建产物"
-            for f in dist/index.html; do
+            for f in dist/index.html dist/viewpoints.html dist/quotations.html dist/gallery.html; do
               [ -f "$f" ] || { echo "缺少构建产物: $f"; exit 1; }
             done
             echo "==> Vite 构建通过 ✔"

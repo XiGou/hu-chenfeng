@@ -2,42 +2,37 @@
 
 户晨风的**精华摘录**静态站点 —— 从 2023–2025 年直播文字稿中手工挑选的只言片语，以**极简主义**的风格呈现，专注文本与多媒体。
 
-基于 **Vite + Vue 3** 构建，干净、留白、克制，无多余装饰。
+基于 **Vite + Vue 3** 构建，站彻底 **MPA（多页应用）**：首页 / 观点 / 语录 / 展厅各自为独立 URL 页面，构建期全量预渲染（SSR），无需执行 JS 即可阅读内容。
 
 ## ✨ 特性
 
-- **极简主义 UI**：白底、留白、衬线正文，专注内容本身，无纸纹 / 印章 / 装饰性动效
-- **三大栏目**：页首导航可在「选读」「观点」「语录」之间切换——
-  - **选读**：从全集文字稿中摘取的精华片段，安静阅读
-  - **观点**：AI 通读全集后归纳的重要观点（源自 `reference/viewpoints.md`）
-  - **语录**：按主题整理的语录小文章（源自 `reference/quotations/`）
-  - **展厅**：收集户晨风先生常见的图像资料及其介绍，点击后可查看大图
-- **实时检索**：搜索框可按关键词 / 主题 / 日期实时过滤当前栏目
-- **多媒体可选**：每条摘录可独立附带音频、视频、外链
+- **极简主义 UI**：白底、留白、衬线正文，专注内容本身
+- **站彻底 MPA**：每个栏目独立 URL 页，互链导航——
+  - **首页（选读 Essence）**：`/` 从全集文字稿中摘取的精华片段列表，每条链接到独立详情页 `选读/<id>.html`
+  - **观点 Viewpoints**：`/viewpoints.html` AI 通读全集后归纳的核心立场
+  - **语录 Quotations**：`/quotations.html` 按主题整理的语录小文章
+  - **展厅 Gallery**：`/gallery.html` 图像资料集锦，点击查看大图
+- **全量预渲染（SSR）**：构建期用 `@vue/server-renderer` 渲染所有页面内容到静态 HTML，搜索引擎与无 JS 环境可直接读取正文
+- **实时检索**：每页搜索框可按关键词实时过滤当前栏目内容（客户端交互）
+- **多媒体可选**：选读可独立附带音频、外链（视频/YouTube 等）
 - **悬浮 BGM 播放器**：右下角悬浮迷你播放器，可在多首静态 BGM 中任选一首循环播放
-- **独立分享页**：每条选读在构建时自动生成独立静态 HTML（`站点/选读/<序号>.html`），
-  含 OG / Twitter Card meta，可直接分享到 X(Twitter) 等平台并点播音频
+- **独立分享页**：每条选读构建时生成独立静态 HTML（`站点/选读/<id>.html`），含 OG / Twitter Card meta，可直接分享到 X(Twitter) 并点播音频
 
 ## 🛠 技术栈
 
 | 层 | 技术 |
 |----|------|
-| 构建 | Vite 6 |
-| 框架 | Vue 3 (`<script setup>`) |
+| 构建 | Vite 6（MPA 多入口） |
+| 框架 | Vue 3（`<script setup>`） |
+| 预渲染 | `@vue/server-renderer`（Vue 自带） |
 | 样式 | 原生 CSS 变量 |
-| 素材 | `reference/hu-chenfeng` submodule |
 
 ## 🚀 本地开发
 
 ```bash
-# 克隆时初始化 submodule
-git clone --recurse-submodules <repo>
-# 或对已克隆仓库：
-git submodule update --init --recursive
-
 npm install
 npm run dev      # 开发服务器（http://localhost:5173）
-npm run build    # 生产构建到 dist/（含分享页自动生成）
+npm run build    # 生产构建 → dist/（MPA + SSR 预渲染 + 选读详情页）
 npm run preview  # 预览构建产物
 ```
 
@@ -45,156 +40,66 @@ npm run preview  # 预览构建产物
 
 通过根目录 `.cnb.yml` 流水线，push 到 `main` 分支自动构建并部署：
 
-- **构建**：初始化 submodule → `npm ci` → `vite build` + `gen-share-pages`
-- **公网部署**：将 `dist/` 静态产物同步到腾讯云 COS 对象存储（配合静态网站托管）。
-  需配置 `COS_SECRET_ID`、`COS_SECRET_KEY`、`COS_BUCKET`、`COS_REGION`（可选，默认 `ap-guangzhou`）。
-  未配置 COS 凭证时仅执行构建，部署自动跳过。
+- **构建**：`vite build` → `pre-render.mjs`（SSR 预渲染）→ `gen-quote-videos` → `gen-share-pages`
+- **公网部署**：将 `dist/` 静态产物同步到腾讯云 COS 对象存储
 
-> **路径兼容**：构建产物中的资源（JS / CSS / 音频 / BGM）均使用**相对路径**引用
-> （`vite.config.js` 中 `base: "./"`），因此 `dist/` 可部署到任意位置，无需修改代码：
-> - GitHub Pages 项目站点（`/hu-chenfeng/` 子路径）
-> - Cloudflare Pages（根域名或任意子路径）
-> - 对象存储 / 本地静态托管
->
-> 只要将 `dist/` 目录整体上传到静态托管服务的根即可正常访问。
-
-### 分享页的站点地址（SITE_URL）
-
-分享页中的 `og:url` / `twitter:player` 等 meta 标签需要**绝对 URL** 才能让
-X(Twitter) 等平台正确解析播放器卡片。可通过以下方式配置：
-
-1. **流水线环境变量 `SITE_URL`**（推荐）：在 CNB 流水线设置中配置站点公网地址，
-   例如 `https://hu-chenfeng.example.com`
-2. **自动推导**：若配置了 `COS_BUCKET`，流水线会用 `https://<bucket>/` 自动推导
-3. **运行时自动补齐**：未配置 `SITE_URL` 时，分享页在浏览器打开时
-   会用 `location` 自动将相对路径补齐为绝对地址（部分爬虫可能无法识别）
-
-## 📝 如何新增一条摘录
-
-选读（Essence）的**每一条内容都独立维护为一个 Markdown 文件**，存放于
-`src/data/essence/`。文件采用「YAML front-matter + 正文」的易读格式，前端
-`essence.js` 会自动收集该目录下所有以数字命名的 `*.md` 并按 id 升序汇总。
-字段说明见 `src/data/essence/README.md`。
-
-在 `src/data/essence/` 新建一个 `<id>.md`（id 取现有最大 id + 1）：
-
-```md
----
-id: 11
-date: 2025-01-14                 # 直播日期 YYYY-MM-DD
-theme: 小地方 / 大城市            # 主题标签（可多个，用空格/、/、/隔开）
-source: reference/hu-chenfeng/2025年01月/2025-01-14.md  # 原始出处
-audio: audio/quotes/xxx.mp3      # 音频（可选，相对 public，勿带前缀）
-video: https://...               # 视频（可选，外链）
-links:                           # 外链列表（可选）
-  - type: youtube
-    label: YouTube
-    url: https://...
----
-摘录的正文文本……
-```
-
-> `source` 路径对应 `reference/hu-chenfeng` submodule 内的文件，便于追溯完整上下文。
-
-新增文件后，`npm run build` 会自动：
-- 前端 SPA 汇总展示该选读
-- **自动生成**对应的分享页 `dist/选读/<id>.html`
-
-## ✍️ 通过 Issue 提交新选读
-
-若不想直接改代码，可通过仓库的 **「提交新选读」** Issue 模板提交，自动生成 PR：
-
-1. 新建 Issue → 选择 **「提交新选读」** 模板
-2. 按提示填写 **标题、主题 tag、正文文本** 等必要信息
-   （可选：原始出处、音频、外链）
-
-   主题 tag 可直接使用常用标签（节奏、经济、现实、价值观、认知、自述、幸存者偏差、意义、职业等），
-   也可自由填写自定义主题词。
-
-   > **多个 tag 怎么隔开？** 支持一条内容挂多个 tag：用「空格」「/」「、」等任一分隔符隔开即可。
-   > 例如 `小地方 / 大城市`（两个 tag）或 `小地方 大城市`、`经济、现实`。
-   > 前端会把它们渲染成多个独立的 tag 胶囊，点任一个即可按该 tag 检索。
-   > 前端已支持多 tag 解析（`src/data/lib/tags.js`），无需额外配置。
-3. 提交后，`Submit Selection` 工作流会解析内容、将本条选读生成为
-   `src/data/essence/<id>.md` 独立文件，并自动创建一个待合入的 PR
-
-**音频（可选）** 支持三种方式：
-
-- **上传音频文件**：直接在音频字段拖拽/上传二进制音频，工作流会将其下载并
-  贴入 `public/audio/quotes/`，`essence.js` 自动引用本地资源
-- **外链 URL**：填写 `https://...` 外链，原样保留
-- **仓库内路径**：填写如 `public/audio/quotes/xxx.mp3`，自动转成站点资源路径
-
-## 🔗 分享选读
-
-每条选读详情页都有一个「复制分享链接」按钮。点击后会把当前选读的
-**独立分享页 URL**（形如 `https://<site>/选读/<id>.html`）复制到剪贴板，
-可直接粘贴到 X(Twitter)、微博、B 站等平台。
-
-分享页特点：
-
-- **标题**展示清晰：`og:title` = 选读标题
-- **X(Twitter) 可点播**：带音频的选读使用 `twitter:card=player`，
-  X 预览卡片中可直接点击播放
-- **全平台预览**：无音频的选读使用 `twitter:card=summary`，显示标题 + 摘要
-- **页面内兜底播放器**：浏览器直接打开分享页时，有原生 `<audio controls>` 可播放
-- **静默降级**：某条选读没有音频时不生成音频 meta 和播放器，分享页仅展示标题与正文
-
-## 🎵 背景音乐（BGM）
-
-右下角悬浮迷你播放器支持从几首静态 BGM 中任选一首循环播放。曲目配置在
-`src/data/bgm.js`，音频文件放入 `public/bgm/` 目录（文件名与配置一致即可）。
-
-受版权限制，仓库默认不托管受版权保护的音频文件；将对应音频放入后播放器即可选择。
-详见 `public/bgm/README.md`。
+> **路径兼容**：构建产物中的资源（JS / CSS / 音频 / BGM）均使用**相对路径**引用（`vite.config.js` 中 `base: "./"`），`dist/` 可部署到任意位置（GitHub Pages 子路径 / COS / Cloudflare Pages）。
 
 ## 📁 项目结构
 
 ```
-├── index.html                  # Vite 入口 HTML
-├── vite.config.js              # Vite 配置
+├── index.html                  # 首页入口 HTML（选读列表）
+├── viewpoints.html             # 观点栏目入口 HTML
+├── quotations.html             # 语录栏目入口 HTML
+├── gallery.html                # 展厅栏目入口 HTML
+├── vite.config.js              # Vite 配置（MPA 多入口）
 ├── scripts/
-│   └── gen-share-pages.mjs     # 分享页生成器（Node.js，读取 essence md 生成独立 HTML）
-├── reference/                  # 参考资源库（不参与网页展示）
-│   ├── HuChenFeng-main.zip     # 户晨风全集文字稿压缩包（不解包读取）
-│   ├── lib/                    # JS 读取 API（readFile/readLine/全文迭代器）
-│   ├── viewpoints.md           # AI 分析的重要观点列表
-│   └── quotations/             # 户晨风语录小文章
+│   ├── pre-render.mjs          # SSR 预渲染脚本（生成全量静态 HTML）
+│   ├── gen-share-pages.mjs     # 选读详情页生成器
+│   └── gen-quote-videos.mjs    # ffmpeg 合成视频
 ├── src/
-│   ├── main.js                 # Vue 应用入口
-│   ├── App.vue                 # 根组件（栏目导航 + 视图切换）
-│   ├── data/essence.js         # 精华摘录数据（meta + 单文件汇总器）
-│   ├── data/essence/           # 选读：每条内容一个独立 Markdown 文件
-│   ├── data/lib/essence-md.js  # 选读 Markdown 解析/序列化（前端与工作流共用）
-│   ├── data/viewpoints.js      # 观点栏目数据（源自 reference/viewpoints.md）
-│   ├── data/quotes.js          # 语录栏目数据（源自 reference/quotations/）
-│   ├── data/gallery.js         # 展厅栏目数据（图像资源及介绍）
-│   ├── data/bgm.js             # 悬浮播放器的 BGM 曲目配置
-│   ├── styles/main.css         # 极简全局样式
-│   └── components/
-│       ├── Masthead.vue        # 页头
-│       ├── Toc.vue             # 选读：摘录列表 + 实时检索
-│       ├── Entry.vue           # 选读：详情（文本 + 多媒体 + 分享）
-│       ├── Viewpoints.vue      # 观点栏目（重要观点列表）
-│       ├── Quotes.vue          # 语录栏目（语录小文章）
-│       ├── Gallery.vue         # 展厅栏目（图像资料 + 大图灯箱）
-│       └── BgmPlayer.vue       # 悬浮迷你 BGM 音乐播放器
+│   ├── layout/
+│   │   └── PageShell.vue       # 共享页面骨架（页头 + 栏目导航 + BGM）
+│   ├── pages/
+│   │   ├── HomePage.vue        # 首页（选读 Essence 列表）
+│   │   ├── ViewpointsPage.vue  # 观点页
+│   │   ├── QuotationsPage.vue  # 语录页
+│   │   └── GalleryPage.vue     # 展厅页
+│   ├── main/
+│   │   ├── home.js             # 首页客户端入口（hydrate）
+│   │   ├── viewpoints.js       # 观点页客户端入口
+│   │   ├── quotations.js       # 语录页客户端入口
+│   │   └── gallery.js          # 展厅页客户端入口
+│   ├── ssr/
+│   │   └── entry.js            # SSR 渲染入口（供 pre-render.mjs 使用）
+│   ├── components/
+│   │   ├── Masthead.vue        # 页头
+│   │   ├── Toc.vue             # 选读列表 + 检索
+│   │   ├── Viewpoints.vue      # 观点内容组件
+│   │   ├── Quotes.vue          # 语录内容组件（列表 + 详情切换）
+│   │   ├── Gallery.vue         # 展厅内容组件（网格 + 灯箱）
+│   │   ├── About.vue           # 关于浮层
+│   │   └── BgmPlayer.vue       # 悬浮迷你 BGM 播放器
+│   ├── data/
+│   │   ├── essence.js          # 选读数据（meta + md 汇总）
+│   │   ├── essence/            # 选读 Markdown 文件
+│   │   ├── viewpoints.js       # 观点数据
+│   │   ├── quotes.js           # 语录数据
+│   │   ├── gallery.js          # 展厅数据
+│   │   └── bgm.js              # BGM 曲目配置
+│   └── styles/main.css         # 全局样式
 ├── public/404.html             # 404 页面
 ├── .cnb.yml                    # CNB 构建部署流水线
 └── .github/workflows/          # GitHub Actions 部署
 ```
 
-## 📚 参考资源库（reference/，不在网页展示）
+## 🗺 页面路由
 
-`reference/` 目录用于存放户晨风直播文字稿的**参考资源**，仅供离线检索、分析与
-研究，**不被任何页面组件引用，因此不会展示在网页上**。
-
-- **`HuChenFeng-main.zip`**：户晨风全集（2023–2025，500+ 篇文字稿）压缩包。
-  以 zip 归档保存，**不解包**；通过 `reference/lib/reader.js` 按需读取其中
-  某个文件、某一行，并提供全文迭代器。
-- **`lib/`**：JS 读取模块（`zip-reader.js` 底层解析 + `reader.js` 高层 API）。
-  运行示例：`node reference/scripts/demo.js`。
-- **`viewpoints.md`**：AI 通读全集后归纳的重要观点列表。
-- **`quotations/`**：按主题整理的户晨风语录小文章（忠于原文，保留其语言特点）。
-
-详见 [`reference/README.md`](reference/README.md)。
+| URL | 内容 |
+|-----|------|
+| `/` 或 `/index.html` | 首页 —— 选读（Essence）精华列表 + 检索 |
+| `/viewpoints.html` | 观点 —— 户晨风核心立场 |
+| `/quotations.html` | 语录 —— 按主题辑录的言论小文章 |
+| `/gallery.html` | 展厅 —— 图像资料集锦 |
+| `/选读/<id>.html` | 选读详情页（独立静态页，分享用） |
+| `/videos/quotes/<id>.mp4` | 选读视频（og:video 直链） |

@@ -24,9 +24,6 @@ export const meta = {
     "从 2023–2025 年的直播文字稿中挑选的只言片语，供安静阅读。另有「观点」（立场之传）、「语录」（言论之辑）与「展厅」（图像之览）三个栏目。",
 };
 
-// 兼容 GitHub Pages 子路径部署的静态资源基址
-const base = import.meta.env.BASE_URL || "/";
-
 // 收集 src/data/essence/ 下所有以数字命名的单文件选读（*.md）。
 // 数字前缀即 id；README 等说明文件（非数字开头）不会被误收。
 const modules = import.meta.glob("./essence/[0-9]*.md", {
@@ -37,12 +34,13 @@ const modules = import.meta.glob("./essence/[0-9]*.md", {
 
 // 归一化 audio 资源路径：
 //   - 外链 URL → 原样保留
-//   - 仓库内资源路径（相对 public，如 audio/quotes/xx.mp3）→ 拼 BASE_URL
+//   - 仓库内资源路径（相对 public，如 audio/quotes/xx.mp3）→ 加 "./" 前缀
+//     站点以 base:"./" 构建，页面与资源同目录 —— 相对路径兼容任意子路径部署。
 function normalizeAudio(value) {
   if (!value) return value;
   if (/^https?:\/\//.test(value)) return value;
   const p = value.startsWith("public/") ? value.slice("public/".length) : value;
-  return base + (p.startsWith("/") ? p.slice(1) : p);
+  return "./" + (p.startsWith("/") ? p.slice(1) : p);
 }
 
 // 选读列表 — 由 src/data/essence/*.md 自动汇总，按 id 升序。
