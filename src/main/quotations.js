@@ -8,7 +8,7 @@ import "../styles/main.css";
 const el = document.querySelector("#app");
 if (!el) throw new Error("#app 元素缺失");
 if (el.children.length) {
-  createSSRApp(QuotationsPage).hydrate(el);
+  createSSRApp(QuotationsPage).mount(el);
 } else {
   createApp(QuotationsPage).mount(el);
 }

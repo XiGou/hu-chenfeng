@@ -8,7 +8,7 @@
  *   3. 本脚本：运行 SSR bundle 渲染 4 个页面，把内容注入 dist/*.html
  *
  * 输出：每个 dist/*.html 的 <div id="app"></div> 被替换为完整的 SSR 渲染内容。
- * 浏览器端 JS 再用 createSSRApp(...).hydrate() 恢复交互。
+ * 浏览器端 JS 用 createSSRApp(...).mount()（SSR 应用 mount 即执行 hydration）恢复交互。
  *
  * 用法：
  *   node scripts/pre-render.mjs            # 默认读 dist/ 写回 dist/
