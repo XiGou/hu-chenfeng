@@ -343,6 +343,8 @@ function buildShareHtml(item) {
   <title>${escHtml(pageTitle)}</title>
   <meta name="description" content="${escHtml(description)}">
   <meta name="theme-color" content="#ffffff">
+  <!-- 随机 favicon：与全站其它页面一致，apple / tesla / sam 中随机 -->
+  <link id="favicon" rel="icon" type="image/svg+xml" href="${relRoot}/favicons/apple.svg">
 
   <!-- ======== Open Graph ======== -->
   <meta property="og:type" content="${ogType}">
@@ -495,6 +497,8 @@ function buildShareHtml(item) {
       height: 40px;
       outline: none;
     }
+    /* 波形播放器接管后须真正隐藏原生播放器（作者样式的 display 覆盖 UA 的 [hidden]） */
+    .audio-wrap audio.audio-native[hidden] { display: none; }
     /* JS 增强：波形播放器 */
     .wave-player[hidden] { display: none; }
     .wave-player .wave-bar {
@@ -768,6 +772,18 @@ function buildShareHtml(item) {
       } catch (err) {
         // 波形播放器加载/初始化失败：保持原生播放器可用
         console.warn('波形播放器加载失败，已回退原生播放器', err);
+      }
+    })();
+  </script>
+
+  <script>
+    // 状态栏缩略图：与全站页面一致，刷新在 apple / tesla / sam 间随机出现
+    (function () {
+      var logos = ["apple", "tesla", "sam"];
+      var pick = logos[Math.floor(Math.random() * logos.length)];
+      var link = document.getElementById("favicon");
+      if (link) {
+        link.setAttribute("href", "${relRoot}/favicons/" + pick + ".svg");
       }
     })();
   </script>
