@@ -8,7 +8,7 @@ import "../styles/main.css";
 const el = document.querySelector("#app");
 if (!el) throw new Error("#app 元素缺失");
 if (el.children.length) {
-  createSSRApp(GalleryPage).hydrate(el);
+  createSSRApp(GalleryPage).mount(el);
 } else {
   createApp(GalleryPage).mount(el);
 }

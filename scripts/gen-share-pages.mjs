@@ -7,7 +7,8 @@
  * 一个可直接独立访问的静态详情页（既是站内详情，也是「分享」的载体——
  * 复制地址栏即可分享，无需单独维护“给 X 用的分享页”）。页面内嵌：
  *   - OG / Twitter Card meta：og:title/description/audio，以及 og:image/twitter:image
- *     —— 预览图从 public/gallery/ 里按选读 id 确定性随机任选一张；
+ *     —— og:image 优先用 scripts/gen-og-cards.mjs 生成的 1200×630 标准社交卡片
+ *       （dist/og-cards/<id>.png，含标题文字），无则退化为按选读 id 确定性挑选的 gallery 图；
  *   - OG / Twitter Card meta 说明：X/Twitter 本身**没有音频卡片**，og:audio 只能让其它
  *     支持音频的平台（如部分 IM / 社交）直接点播，X 不会因此给出可点击播放的媒体；
  *     要让 X 在时间线里“点一下就能播”，只能以视频形式（静帧 gallery 图 + 音频）呈现，
@@ -15,13 +16,15 @@
  *       · 有视频直链（scripts/gen-quote-videos.mjs 已合成 dist/videos/quotes/<id>.mp4）→
  *         twitter:card=player + twitter:player:stream，X 可内联播放该“图+音”视频；
  *       · 无视频 → 退回 summary_large_image / summary 大图/摘要卡。
- *     og:image 预览图从 public/gallery/ 里按选读 id 确定性随机任选一张。
+ *   - og:video / twitter:player 直链：若构建阶段已由 scripts/gen-quote-videos.mjs 为该条选读
+ *     用 ffmpeg 合成 dist/videos/quotes/<id>.mp4（同封面 gallery 图 + 音频），则附加视频直链，
+ *     供支持视频内嵌预览的平台（如 X、部分 IM / 社交）展示；网页内仍用纯 <audio> 播放、不嵌视频。
  *   - 波形播放器（基于 Wavesurfer.js v7，含波形 + 播放/暂停 + 点按跳转 + 播放着色进度，
  *     无 JS 时自动回退为原生 <audio controls>）+ 展厅预览图 + 标题/日期/主题/正文（含 video/links 媒体）
  *   - 分享操作条：底部「复制链接」（复制无 .html 的 canonical 干净地址）与「分享到 X」
  *     （X(Twitter) intent 带标题+链接跳转发推），让分享只需复制/一点即可完成
  *
- * 另外会给首页 dist/index.html 补写基础 OG/Twitter meta（含一张 gallery 预览图），
+ * 另外会给首页 dist/index.html 补写基础 OG/Twitter meta（og:image 优先用首条选读卡片），
  * 使“分享站点首页”也能出预览卡片。
  *
  * 用法：
@@ -84,10 +87,16 @@ function escHtml(s) {
     .replace(/'/g, '&#39;');
 }
 
-/** 文本截断到 ~len 字符（中文按字符计） */
-function truncate(s, len = 80) {
-  s = String(s || '');
-  return s.length > len ? s.slice(0, len) + '…' : s;
+/** 将 Markdown 正文转为纯文本（去粗体/标题/行内代码等标记），用于 og:description */
+function toPlainText(md) {
+  return String(md || '')
+    .replace(/\*\*([^*]+)\*\*/g, '$1')   // **bold**
+    .replace(/#{1,3}\s+/g, '')                // 标题 #
+    .replace(/`([^`]+)`/g, '$1')               // `code`
+    .replace(/^\s*>\s?/gm, '')               // 引用 > 
+    .replace(/[\n\r]+/g, ' ')                // 换行 → 空格
+    .replace(/\s+/g, ' ')
+    .trim();
 }
 
 /** 极简 Markdown → HTML（与前端 md-render.js 保持一致的语义子集） */
@@ -247,10 +256,19 @@ function buildShareHtml(item) {
 
   const themes = splitThemes(theme);
   const body = renderMarkdown(text);
-  const textPreview = truncate(String(text || '').split('\n').map((l) => l.trim()).filter(Boolean).join(' '), 120);
-  const pageTitle = title ? `${title} · 户晨风` : `户晨风 · 选读 #${id}`;
-  const description = title ? `${title} —— ${textPreview}` : textPreview;
+  // —— 文本/描述：去 Markdown 标记后拼「标题 —— 正文预览」，总长截到 ~115 码点（社交平台约显示 125 字符）
   const displayTitle = title || `选读 #${id}`;
+  const cleanText = toPlainText(text);
+  const SEP = ' —— ';
+  const maxDescLen = 115;
+  let description = title ? `${displayTitle}${SEP}${cleanText}` : cleanText;
+  if ([...description].length > maxDescLen) {
+    description = [...description].slice(0, maxDescLen - 1).join('') + '…';
+  }
+  // 页面 <title>：更充分地利用 SERP 空间 —— 标题 + 站点说明
+  const pageTitle = title
+    ? `${displayTitle} · 户晨风直播精选 | 选读 #${id}`
+    : `户晨风 · 选读 #${id} | 直播文字稿精华摘录`;
 
   const shareFile = path.join(OUT_DIR, DIR_NAME, `${id}.html`);
   const relRoot = relToDist(shareFile); // 从分享页 → dist/ 的相对路径
@@ -319,18 +337,32 @@ function buildShareHtml(item) {
 
   // 展厅预览图（og:image）：每个页面从 gallery 里确定性随机任选一张
   const galleryImages = getGalleryImages();
-  let imageSitePath = ''; // 相对站点根：gallery/imgN.png
-  let imageAbsUrl = '';   // og:image 需要的绝对/相对站点 URL
-  let imageRelUrl = '';   // 相对本页：../gallery/imgN.png（页面内 <img> 用）
+  // 页内 <img>：展厅原图（确定性挑选，与旧逻辑一致）
+  let imageRelUrl = '';
   if (galleryImages.length) {
     const gi = pickGalleryIndex(id || 0, galleryImages.length);
-    imageSitePath = galleryImages[gi];
-    imageRelUrl = relRoot + '/' + imageSitePath; // 相对本页，供页面内 <img>
-    // og:image —— 配了 SITE_URL 用绝对 URL；未配则用「相对本页」路径，
-    // 使爬虫能基于真实页面 URL（站点/选读/<id>.html）解析到站点/gallery/<n>.png
+    const galleryImg = galleryImages[gi];
+    imageRelUrl = relRoot + '/' + galleryImg; // 相对本页，供页面内 <img>
+  }
+
+  // og:image —— 优先用构建期生成的 1200×630 社交卡片（dist/og-cards/<id>.png）；
+  // 若无（如 ffmpeg/字体缺失时跳过生成），退化为选一张 gallery 图（尽力而为，不作 og:image 比率要求）。
+  let ogImageSitePath = '';
+  const ogCardFile = path.join(OUT_DIR, 'og-cards', `${id}.png`);
+  const hasOgCard = fs.existsSync(ogCardFile);
+  if (hasOgCard) {
+    ogImageSitePath = `og-cards/${id}.png`;
+  } else if (galleryImages.length) {
+    const gi = pickGalleryIndex(id || 0, galleryImages.length);
+    ogImageSitePath = galleryImages[gi];
+  }
+  // og:image 站点相对地址 → 绝对 URL（配 SITE_URL）或相对路径
+  let imageAbsUrl = '';
+  if (ogImageSitePath) {
+    const ogImageRelUrl = relRoot + '/' + ogImageSitePath;
     imageAbsUrl = SITE_URL
-      ? `${SITE_URL}/${imageSitePath}`.replace(/([^:])\/+/g, '$1/')
-      : imageRelUrl;
+      ? `${SITE_URL}/${ogImageSitePath}`.replace(/([^:])\/+/g, '$1/')
+      : ogImageRelUrl;
   }
 
   // 视频直链（og:video）：站点相对路径 videos/quotes/<id>.mp4，配 SITE_URL 烘成绝对 https
@@ -375,6 +407,10 @@ function buildShareHtml(item) {
   ${imageAbsUrl ? `
   <meta property="og:image" content="${escHtml(imageAbsUrl)}">
   <meta property="og:image:secure_url" content="${escHtml(imageAbsUrl)}">
+  <meta property="og:image:type" content="image/png">
+  ${hasOgCard ? `
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">` : ''}
   <meta property="og:image:alt" content="${escHtml(displayTitle)}">` : ''}
   ${videoAbsUrl ? `
   <meta property="og:video" content="${escHtml(videoAbsUrl)}">
@@ -916,8 +952,9 @@ function buildShareHtml(item) {
 // ---------------------------------------------------------------------------
 
 /**
- * 给首页 dist/index.html 补写 Open Graph / Twitter 基础 meta（含一张 gallery 预览图），
- * 让“分享整站/首页”时也能出预览卡片。幂等：已含相关 meta 则跳过。
+ * 给首页 dist/index.html 补写 Open Graph / Twitter 基础 meta。
+ * og:image 优先用首条选读生成的社交卡片（如存在）；否则退化为选 landscape 向 gallery 图。
+ * 幂等：已含相关 meta 则跳过。
  */
 function injectIndexOg() {
   const file = path.join(OUT_DIR, 'index.html');
@@ -930,17 +967,29 @@ function injectIndexOg() {
   if (hasOgTitle) return; // 已注入过
 
   const ogUrl = SITE_URL ? `${SITE_URL}/index.html` : 'index.html';
-  const imageSite = galleryImages.length
-    ? galleryImages[pickGalleryIndex(0, galleryImages.length)]
-    : '';
+
+  // og:image 选择：优先用站点专属的 og-card（og-cards/0.png，标题=站点名）；
+  // 若无则退化为选首条选读的卡片，再退化为 landscape 向 gallery 图。
+  let imageSite = '';
+  const siteCard = path.join(OUT_DIR, 'og-cards', '0.png');
+  const firstCard = path.join(OUT_DIR, 'og-cards', '1.png');
+  const landscapeCandidates = ['gallery/img3.png', 'gallery/img4.png', 'gallery/img5.png'];
+  if (fs.existsSync(siteCard)) {
+    imageSite = 'og-cards/0.png';
+  } else if (fs.existsSync(firstCard)) {
+    imageSite = 'og-cards/1.png';
+  } else if (galleryImages.length) {
+    imageSite = landscapeCandidates.find((p) => galleryImages.includes(p))
+      || galleryImages[0];
+  }
   const ogImage = SITE_URL && imageSite
     ? `${SITE_URL}/${imageSite}`.replace(/([^:])\/+/g, '$1/')
     : imageSite;
 
   const ogBlock = [
     '<meta property="og:type" content="website">',
-    '<meta property="og:title" content="户晨风 · 摘录">',
-    '<meta property="og:description" content="户晨风直播文字稿精华摘录：选读 / 观点 / 语录 / 展厅。安静阅读，边读边听。">',
+    '<meta property="og:title" content="户晨风直播文字稿精华摘录">',
+    '<meta property="og:description" content="户晨风直播文字稿精华摘录——从万千场直播中精选的思考片段：选读 / 观点 / 语录 / 展厅，安静阅读，边读边听。">',
     '<meta property="og:site_name" content="户晨风 · 摘录">',
     '<meta property="og:url" content="' + escHtml(ogUrl) + '">',
   ];
@@ -949,8 +998,8 @@ function injectIndexOg() {
     ogBlock.push('<meta property="og:image:secure_url" content="' + escHtml(ogImage) + '">');
   }
   ogBlock.push('<meta name="twitter:card" content="' + (ogImage ? 'summary_large_image' : 'summary') + '">');
-  ogBlock.push('<meta name="twitter:title" content="户晨风 · 摘录">');
-  ogBlock.push('<meta name="twitter:description" content="户晨风直播文字稿精华摘录：选读 / 观点 / 语录 / 展厅。">');
+  ogBlock.push('<meta name="twitter:title" content="户晨风直播文字稿精华摘录">');
+  ogBlock.push('<meta name="twitter:description" content="户晨风直播文字稿精华摘录——从万千场直播中精选的思考片段：选读 / 观点 / 语录 / 展厅。">');
   if (ogImage) ogBlock.push('<meta name="twitter:image" content="' + escHtml(ogImage) + '">');
 
   // 注入到 <head> 内、</head> 前
