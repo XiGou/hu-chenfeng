@@ -172,9 +172,11 @@ function genVideoFor(item, galleryImages) {
     '-i', audioAbs,
     '-filter_complex', vf,
     '-map', '[v]', '-map', '1:a',
+    // 视频：走 libx264 + crf 压缩（静帧图需压缩转码才能流式内嵌，保留压缩参数）
     '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-profile:v', 'main',
     '-preset', PRESET, '-crf', CRF,
-    '-c:a', 'aac', '-b:a', '128k', '-movflags', '+faststart',
+    // 音频：仅流复制不重新编码（-c:a copy），保留原始音频码流，不做压缩 / 二次转码，避免音质损失
+    '-c:a', 'copy', '-movflags', '+faststart',
     '-shortest', outFile
   ];
 
