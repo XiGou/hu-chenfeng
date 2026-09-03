@@ -19,6 +19,9 @@
  *   - og:video / twitter:player 直链：若构建阶段已由 scripts/gen-quote-videos.mjs 为该条选读
  *     用 ffmpeg 合成 dist/videos/quotes/<id>.mp4（同封面 gallery 图 + 音频），则附加视频直链，
  *     供支持视频内嵌预览的平台（如 X、部分 IM / 社交）展示；网页内仍用纯 <audio> 播放、不嵌视频。
+ *     视频类 meta 值统一用「/」开头的站点根相对路径（如 /videos/quotes/<id>.mp4），不绑定 SITE_URL
+ *     域名 —— 这样同一份 dist 无论部署到 COS 还是 GitHub Pages 等其它站点，爬虫都会以当前抓取页面
+ *     的域名解析该路径，跨站点部署依然可用（og:url / og:image / og:audio 仍烘成绝对 https）。
  *   - 波形播放器（基于 Wavesurfer.js v7，含波形 + 播放/暂停 + 点按跳转 + 播放着色进度，
  *     无 JS 时自动回退为原生 <audio controls>）+ 展厅预览图 + 标题/日期/主题/正文（含 video/links 媒体）
  *   - 分享操作条：底部「复制链接」（复制无 .html 的 canonical 干净地址）与「分享到 X」
@@ -365,20 +368,18 @@ function buildShareHtml(item) {
       : ogImageRelUrl;
   }
 
-  // 视频直链（og:video）：站点相对路径 videos/quotes/<id>.mp4，配 SITE_URL 烘成绝对 https
+  // 视频直链（og:video）：站点相对路径 videos/quotes/<id>.mp4。
+  // 使用以「/」开头的站点根相对路径（如 /videos/quotes/1.mp4），而非烘成 SITE_URL 绝对域名——
+  // 这样同一份 dist 无论部署到 COS(hu-chenfeng...) 还是 GitHub Pages 等其它站点，
+  // 抓取器的 og:video/twitter:player 都会以「当前抓取页面的域名」解析该路径，跨站点部署皆可用。
   const videoSitePath = `videos/quotes/${id}.mp4`;
-  let videoAbsUrl = '';
-  if (hasVideo) {
-    videoAbsUrl = SITE_URL
-      ? `${SITE_URL}/${videoSitePath}`.replace(/([^:])\/+/g, '$1/')
-      : relRoot + '/' + videoSitePath; // 无 SITE_URL 用相对本页，运行时 JS 补齐
-  }
+  const videoUrl = '/' + videoSitePath; // 站点根相对路径，跟随当前访问域名
   // twitter:card —— 有视频直链时用 player 卡（配合 twitter:player:stream，
   // X 会在时间线里直接给出可点播放的视频预览，即可点播“图 + 音频/视频”）；无视频再退而求其次：
   // 有大图用 summary_large_image，否则 summary。og:audio 本身 X 不出音频卡，无法点播。
   // 注意：twitter:card=player 需先将站点域名在 X(Twitter) 开发者平台提交/校验（player 卡白名单），
   // 否则 X 可能回退到摘要卡或不出图。见 scripts/gen-quote-videos.mjs 生成的 videos/quotes/<id>.mp4。
-  const twitterCardType = videoAbsUrl
+  const twitterCardType = videoUrl
     ? 'player'
     : (imageAbsUrl ? 'summary_large_image' : 'summary');
 
@@ -412,9 +413,9 @@ function buildShareHtml(item) {
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">` : ''}
   <meta property="og:image:alt" content="${escHtml(displayTitle)}">` : ''}
-  ${videoAbsUrl ? `
-  <meta property="og:video" content="${escHtml(videoAbsUrl)}">
-  <meta property="og:video:secure_url" content="${escHtml(videoAbsUrl)}">
+  ${videoUrl ? `
+  <meta property="og:video" content="${escHtml(videoUrl)}">
+  <meta property="og:video:secure_url" content="${escHtml(videoUrl)}">
   <meta property="og:video:type" content="video/mp4">
   <meta property="og:video:width" content="1280">
   <meta property="og:video:height" content="720">` : ''}
@@ -427,9 +428,9 @@ function buildShareHtml(item) {
   <meta name="twitter:description" content="${escHtml(description)}">
   ${imageAbsUrl ? `
   <meta name="twitter:image" content="${escHtml(imageAbsUrl)}">` : ''}
-  ${videoAbsUrl ? `
-  <meta name="twitter:player" content="${escHtml(videoAbsUrl)}">
-  <meta name="twitter:player:stream" content="${escHtml(videoAbsUrl)}">
+  ${videoUrl ? `
+  <meta name="twitter:player" content="${escHtml(videoUrl)}">
+  <meta name="twitter:player:stream" content="${escHtml(videoUrl)}">
   <meta name="twitter:player:stream:type" content="video/mp4">
   <meta name="twitter:player:width" content="1280">
   <meta name="twitter:player:height" content="720">` : ''}
@@ -808,11 +809,12 @@ function buildShareHtml(item) {
       patch('meta[property="og:audio:secure_url"]', pageDir);
       patch('meta[property="og:image"]', pageDir);
       patch('meta[property="og:image:secure_url"]', pageDir);
-      // og:video / twitter:player —— 相对当前页目录（如 ../videos/quotes/<id>.mp4）
-      patch('meta[property="og:video"]', pageDir);
-      patch('meta[property="og:video:secure_url"]', pageDir);
-      patch('meta[name="twitter:player"]', pageDir);
-      patch('meta[name="twitter:player:stream"]', pageDir);
+      // og:video / twitter:player —— 站点根相对路径（如 /videos/quotes/<id>.mp4），
+      // 以站点根 root 补齐，使其跟随当前访问域名（跨 COS / GitHub 部署皆可用）
+      patch('meta[property="og:video"]', root);
+      patch('meta[property="og:video:secure_url"]', root);
+      patch('meta[name="twitter:player"]', root);
+      patch('meta[name="twitter:player:stream"]', root);
     })();
   </script>
 
