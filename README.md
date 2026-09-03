@@ -41,25 +41,25 @@ npm run preview  # 预览构建产物
 
 通过根目录 `.cnb.yml` 流水线，push 到 `main` 分支自动构建并部署：
 
-- **构建**：`vite build` → `pre-render.mjs`（SSR 预渲染）→ `gen-og-cards` → `gen-share-pages`
+- **构建**：`vite build` → `gen-og-cards`（社交卡片）→ `pre-render.mjs`（SSR 预渲染列表页 + 选读详情页）
 - **公网部署**：将 `dist/` 静态产物同步到腾讯云 COS 对象存储
 
 > **路径兼容**：构建产物中的页面资源（JS / CSS / 音频 / BGM）均使用**相对路径**引用（`vite.config.js` 中 `base: "./"`），资源文件可适配任意部署位置。
-> 分享页 **og meta 通过读取 `SITE_URL` 环境变量**在构建期烘成绝对 https（各部署平台在自身 CI 设置中配置，GitHub Pages 用 `https://xigou.github.io/hu-chenfeng`，CF/COS 用 `https://hu-chenfeng.19960312.xyz`），保证 X/Twitter 等爬虫能正确出预览卡片。未配置时产物保持域名无关，og meta 走相对路径。
+> 选读详情页 **og meta 通过读取 `SITE_URL` 环境变量**在构建期烘成绝对 https（各部署平台在自身 CI 设置中配置，GitHub Pages 用 `https://xigou.github.io/hu-chenfeng`，CF/COS 用 `https://hu-chenfeng.19960312.xyz`），保证 X/Twitter 等爬虫能正确出预览卡片。未配置时产物保持域名无关，og meta 走相对路径。
 > `og:url` 使用不带 `.html` 后缀的 **canonical 干净地址**（如 `/选读/1`），GitHub Pages 与 Cloudflare 均支持无后缀路径解析到对应 `.html`，同时避免 CF 对 `.html` 走 308 重定向。
 
 ## 📁 项目结构
 
 ```
 ├── index.html                  # 首页入口 HTML（选读列表）
+├── detail.html                 # 选读详情页 HTML 壳（构建期复制为 选读/<id>.html）
 ├── viewpoints.html             # 观点栏目入口 HTML
 ├── quotations.html             # 语录栏目入口 HTML
 ├── gallery.html                # 展厅栏目入口 HTML
 ├── vite.config.js              # Vite 配置（MPA 多入口）
 ├── scripts/
-│   ├── pre-render.mjs          # SSR 预渲染脚本（生成全量静态 HTML）
-│   ├── gen-og-cards.mjs       # og:image 社交卡片生成器（1200×630）
-│   └── gen-share-pages.mjs     # 选读详情页生成器
+│   ├── pre-render.mjs          # SSR 预渲染（列表页 + 选读详情页 + og 注入）
+│   └── gen-og-cards.mjs        # og:image 社交卡片生成器（1200×630）
 ├── src/
 │   ├── layout/
 │   │   └── PageShell.vue       # 共享页面骨架（页头 + 栏目导航 + BGM）
@@ -72,7 +72,8 @@ npm run preview  # 预览构建产物
 │   │   ├── home.js             # 首页客户端入口（hydrate）
 │   │   ├── viewpoints.js       # 观点页客户端入口
 │   │   ├── quotations.js       # 语录页客户端入口
-│   │   └── gallery.js          # 展厅页客户端入口
+│   │   ├── gallery.js          # 展厅页客户端入口
+│   │   └── detail.js           # 选读详情页客户端入口（hydrate）
 │   ├── ssr/
 │   │   └── entry.js            # SSR 渲染入口（供 pre-render.mjs 使用）
 │   ├── components/
@@ -82,7 +83,10 @@ npm run preview  # 预览构建产物
 │   │   ├── Quotes.vue          # 语录内容组件（列表 + 详情切换）
 │   │   ├── Gallery.vue         # 展厅内容组件（网格 + 灯箱）
 │   │   ├── About.vue           # 关于浮层
-│   │   └── BgmPlayer.vue       # 悬浮迷你 BGM 播放器
+│   │   ├── BgmPlayer.vue       # 悬浮迷你 BGM 播放器
+│   │   ├── EssenceDetail.vue   # 选读详情页内容组件（批注/正文/媒体/分享）
+│   │   ├── WaveAudio.vue       # 选读详情波形音频播放器
+│   │   └── ShareBar.vue        # 复制链接 / 分享到 X 操作条
 │   ├── data/
 │   │   ├── essence.js          # 选读数据（meta + md 汇总）
 │   │   ├── essence/            # 选读 Markdown 文件

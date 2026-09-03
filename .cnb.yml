@@ -4,12 +4,12 @@
 # 用于在 CNB 平台"直接部署"户晨风语录站点。
 # 站点基于 Vite + Vue 3 构建，本流水线负责：
 #   1. 构建 —— 安装依赖并用 Vite 打包到 dist/
-#   2. 分享页生成 —— 为每条「选读」生成 og 卡片 + 独立静态分享页（dist/选读/<id>.html）
+#   2. 详情页生成 —— og 卡片 + Vue SSR 预渲染每条「选读」详情页（dist/选读/<id>.html）
 #   3. 公网部署 —— 通过腾讯云 COS 对象存储 + 静态网站托管对外提供服务
 #   4. 同步代码 —— 将代码自动推送到 GitHub 同名仓库（XiGou/hu-chenfeng）
 #
 # 【站点地址 SITE_URL】
-#   `npm run build` 通过 `process.env.SITE_URL` 读取环境变量，将分享页
+#   `npm run build` 通过 `process.env.SITE_URL` 读取环境变量，将详情页
 #   og:url / og:image / og:audio 在构建期烘成绝对 https
 #   （X/Twitter/微信等爬虫不执行 JS，需要绝对地址才能出预览卡片）。
 #   建议在各部署平台按其配置方式注入 SITE_URL，而非在本流水线中硬编码：
@@ -79,7 +79,7 @@ main:
               echo "    未配置 SITE_URL/COS_BUCKET——og meta 走相对路径，X 爬虫不出预览卡！"
             fi
 
-            echo "==> Vite 生产构建（含分享页生成）"
+            echo "==> Vite 生产构建（含详情页 Vue SSR 预渲染）"
             npm run build
 
             echo "==> 校验构建产物"

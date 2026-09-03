@@ -31,6 +31,7 @@ export default defineConfig({
         viewpoints: fileURLToPath(new URL("./viewpoints.html", import.meta.url)),
         quotations: fileURLToPath(new URL("./quotations.html", import.meta.url)),
         gallery: fileURLToPath(new URL("./gallery.html", import.meta.url)),
+        detail: fileURLToPath(new URL("./detail.html", import.meta.url)),
       },
       output: {
         manualChunks: {

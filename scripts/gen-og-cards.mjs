@@ -6,14 +6,14 @@
  * 无任何文字/标题）。社交平台（X/Twitter/微信等）按 1.91:1 裁剪，卡片会被截断；
  * 且图片上无文字说明，传播点击率低。本脚本在构建期用 ffmpeg 为每条选读合成一张
  * 标准 1200×630 卡片：
- *   · 背景 = 该选读确定性对应的 gallery 图（与 gen-share-pages
+ *   · 背景 = 该选读确定性对应的 gallery 图（与构建期页面生成器
  *     相同的确定性随机选择逻辑），先 scale+crop 填满画布再轻微模糊，避免画面过杂
  *   · 中部叠加半透明黑色横条，提高文字对比度
  *   · 标题（白色大字）+ 站点品牌「户晨风 · 摘录」
- * 产物输出到 dist/og-cards/<id>.png，gen-share-pages 检测到即优先用此卡作 og:image。
+ * 产物输出到 dist/og-cards/<id>.png，pre-render 检测到即优先用此卡作 og:image。
  *
  * ffmpeg 依赖：需要系统装有 ffmpeg 与 CJK 字体（fonts-noto-cjk）。若缺失，本脚本
- * 打印警告并跳过（不阻断构建，gen-share-pages 回退用 gallery 图）。
+ * 打印警告并跳过（不阻断构建，页面生成回退用 gallery 图）。
  *
  * 用法：
  *   node scripts/gen-og-cards.mjs
@@ -58,7 +58,7 @@ function findCjkFont() {
   return '';
 }
 
-// ---- 展厅 gallery 图（与 gen-share-pages 同一套读取） ----
+// ---- 展厅 gallery 图（与构建期页面生成器 同一套读取） ----
 let _galleryCache = null;
 function getGalleryImages() {
   if (_galleryCache) return _galleryCache;
@@ -75,14 +75,14 @@ function getGalleryImages() {
   return _galleryCache;
 }
 
-/** 确定性随机选择（与 gen-share-pages 一致） */
+/** 确定性随机选择（与构建期页面生成器 一致） */
 function pickGalleryIndex(seed, len) {
   if (len <= 0) return -1;
   const h = (Math.imul(seed || 0, 2654435761) >>> 0);
   return h % len;
 }
 
-/** 收集 essence（与 gen-share-pages 一致） */
+/** 收集 essence（与构建期页面生成器 一致） */
 function collectEssence(dir) {
   if (!fs.existsSync(dir)) return [];
   const items = [];
