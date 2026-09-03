@@ -82,7 +82,8 @@ export function stringifyMarkdownItem(item) {
   const lines = ['---'];
   const put = (k, v) => {
     if (v === undefined || v === null || String(v).trim() === '') return;
-    const val = String(v).trim();
+    // 规整换行（\r\n / \r → \n），避免 YAML 块标量中残留 CR
+    const val = String(v).replace(/\r\n/g, '\n').replace(/\r/g, '\n').trim();
     if (val.includes('\n')) {
       // 多行值（如编者批注 note 含换行/分段）→ YAML 字面量块标量
       const indented = val
