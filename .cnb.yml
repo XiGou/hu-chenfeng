@@ -122,11 +122,33 @@ main:
 
             echo "==> 将本地 main 同步到 GitHub 最新"
             if git rev-parse --verify github/main >/dev/null 2>&1; then
-              if ! git merge-base --is-ancestor github/main HEAD; then
-                echo "GitHub main 领先本地，rebase 将本地提交叠加到 GitHub 之上"
-                git rebase github/main
-              else
+              if git merge-base --is-ancestor github/main HEAD; then
                 echo "本地已包含 GitHub 最新提交，无需 rebase"
+              else
+                echo "GitHub main 与本地存在分叉，尝试 rebase 将本地提交叠加到 GitHub 之上"
+                # rebase 为镜像同步步骤：CNB 是权威源、GitHub 仅镜像。
+                # 历史分叉时优先尝试 rebase；若冲突，说明 GitHub 存在 CNB 没有的提交，
+                # 需记录冲突现场并判定：以 CNB 权威内容为准收敛 GitHub 镜像。
+                set +e
+                if git rebase github/main; then
+                  REBASE_OK=1
+                else
+                  echo "[同步冲突] CNB 与 GitHub 历史分叉，rebase 冲突。"
+                  echo "  记录 GitHub 端独有提交："
+                  git log --oneline github/main..HEAD --format='    %h %s' 2>/dev/null || true
+                  echo "  两端文件差异留档："
+                  git diff --stat HEAD github/main 2>/dev/null || true
+                  echo "  CNB 为权威源、GitHub 为镜像，将以 CNB 为准收敛 GitHub。"
+                  git rebase --abort
+                  REBASE_OK=0
+                fi
+                set -e
+                if [ "$REBASE_OK" = "0" ]; then
+                  echo "==> 以 CNB 权威内容 force 收敛 GitHub 镜像（镜像历史分叉已记录留档）"
+                  git push --force-with-lease github HEAD:main
+                  echo "==> GitHub 镜像已收敛至 CNB 最新内容 ✔"
+                  exit 0
+                fi
               fi
             fi
 
