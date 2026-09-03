@@ -13,7 +13,8 @@
  *   - og:video / twitter:player 直链：若构建阶段已由 scripts/gen-quote-videos.mjs 为该条选读
  *     用 ffmpeg 合成 dist/videos/quotes/<id>.mp4（同封面 gallery 图 + 音频），则附加视频直链，
  *     供支持视频内嵌预览的平台（如 X、部分 IM / 社交）展示；网页内仍用纯 <audio> 播放、不嵌视频。
- *   - 原生 <audio controls> 播放器 + 展厅预览图 + 标题/日期/主题/正文（含 video/links 媒体）
+ *   - 波形播放器（基于 Wavesurfer.js v7，含波形 + 播放/暂停 + 点按跳转 + 播放着色进度，
+ *     无 JS 时自动回退为原生 <audio controls>）+ 展厅预览图 + 标题/日期/主题/正文（含 video/links 媒体）
  *
  * 另外会给首页 dist/index.html 补写基础 OG/Twitter meta（含一张 gallery 预览图），
  * 使“分享站点首页”也能出预览卡片。
@@ -248,6 +249,8 @@ function buildShareHtml(item) {
 
   const shareFile = path.join(OUT_DIR, DIR_NAME, `${id}.html`);
   const relRoot = relToDist(shareFile); // 从分享页 → dist/ 的相对路径
+  // 波形播放器（Wavesurfer）ESM 的相对路径：从分享页 → dist/vendor/wavesurfer.esm.js
+  const waveModuleRel = relRoot + '/vendor/wavesurfer.esm.js';
 
   // 视频（og:video）：若构建阶段已由 scripts/gen-quote-videos.mjs 为该 id 合成
   // dist/videos/quotes/<id>.mp4，则此处带上 og:video 直链，供支持视频预览的平台展示
@@ -446,30 +449,70 @@ function buildShareHtml(item) {
       max-height: 460px;
       object-fit: contain;
     }
-    /* 音频 */
+    /* 音频播放器（波形 + 控件 + 播放着色） */
     .audio-wrap {
       margin: 20px 0 24px;
-      padding: 16px 16px 12px;
-      background: #fafafa;
-      border: 1px solid #eee;
-      border-radius: 12px;
+      padding: 18px 18px 14px;
+      background: #ffffff;
+      border: 1px solid #ececec;
+      border-radius: 16px;
+      box-shadow: 0 1px 2px rgba(0,0,0,.03);
     }
-    .audio-wrap audio {
+    /* 无 JS 兜底：原生播放器默认展示 */
+    .audio-wrap audio.audio-native {
       display: block;
       width: 100%;
       height: 40px;
       outline: none;
     }
-    .audio-hint {
+    /* JS 增强：波形播放器 */
+    .wave-player[hidden] { display: none; }
+    .wave-player .wave-bar {
       display: flex;
       align-items: center;
-      gap: 6px;
+      gap: 14px;
+      margin-bottom: 10px;
+    }
+    .wave-play {
+      flex: none;
+      width: 42px;
+      height: 42px;
+      border: 0;
+      border-radius: 50%;
+      background: #111;
+      color: #fff;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: background .15s ease, transform .05s ease;
+    }
+    .wave-play:hover { background: #333; }
+    .wave-play:active { transform: scale(.96); }
+    .wave-ico { display: block; }
+    .wave-ico-pause { display: none; }
+    .wave-player.is-playing .wave-ico-pause { display: block; }
+    .wave-player.is-playing .wave-ico-play { display: none; }
+    .wave-head { min-width: 0; }
+    .wave-name {
+      font-size: 13px;
+      color: #333;
+      font-weight: 600;
+      letter-spacing: .02em;
+    }
+    .wave-time {
       font-size: 12px;
       color: #999;
-      margin-bottom: 8px;
+      font-variant-numeric: tabular-nums;
+      margin-top: 2px;
     }
-    .audio-hint .play-icon { color: #111; font-size: 14px; }
-    .audio-hint .tip { color: #888; }
+    .wave-canvas {
+      width: 100%;
+      border-radius: 8px;
+      overflow: hidden;
+      cursor: pointer;
+    }
+    .audio-hint { display: none; }
 
     /* 正文 */
     .content {
@@ -561,11 +604,22 @@ function buildShareHtml(item) {
 
     ${audioAbsUrl ? `
     <div class="audio-wrap">
-      <div class="audio-hint">
-        <span class="play-icon">♪</span>
-        <span class="tip">点击播放音频</span>
+      <!-- 无 JS 兜底：原生播放器（JS 就绪后由波形播放器接管并隐藏本元素） -->
+      <audio class="audio-native" controls preload="metadata" src="${escHtml(audioUrl)}"></audio>
+      <!-- 波形播放器：加载 Wavesurfer 后展示（波形 + 播放控件 + 播放着色） -->
+      <div class="wave-player" hidden>
+        <div class="wave-bar">
+          <button type="button" class="wave-play" data-wave-play aria-label="播放" aria-pressed="false">
+            <svg class="wave-ico wave-ico-play" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M8 5v14l11-7z"/></svg>
+            <svg class="wave-ico wave-ico-pause" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg>
+          </button>
+          <div class="wave-head">
+            <div class="wave-name">边读边听</div>
+            <div class="wave-time"><span data-wave-current>0:00</span><span class="wave-time-sep">/</span><span data-wave-duration>--:--</span></div>
+          </div>
+        </div>
+        <div class="wave-canvas" data-wave-container></div>
       </div>
-      <audio controls preload="metadata" src="${escHtml(audioUrl)}"></audio>
     </div>` : ''}
 
     <div class="content">${contentHtml}</div>
@@ -619,6 +673,66 @@ function buildShareHtml(item) {
       patch('meta[property="og:video:secure_url"]', pageDir);
       patch('meta[name="twitter:player"]', pageDir);
       patch('meta[name="twitter:player:stream"]', pageDir);
+    })();
+  </script>
+
+  <script type="module">
+    // 波形播放器 —— 基于 Wavesurfer 渲染波形、支持点按跳转与「播放着色」进度条。
+    // 页面无 JS 时保留原生 <audio controls> 兜底；本模块加载成功后接管为波形播放器。
+    (async function () {
+      var container = document.querySelector('[data-wave-container]');
+      var nativeAudio = document.querySelector('.audio-native');
+      if (!container || !nativeAudio) return;
+      var playerEl = container.closest('.wave-player');
+      var playBtn = playerEl.querySelector('[data-wave-play]');
+      var curEl = playerEl.querySelector('[data-wave-current]');
+      var durEl = playerEl.querySelector('[data-wave-duration]');
+
+      try {
+        var WaveSurfer = (await import('${waveModuleRel}')).default;
+        var ws = WaveSurfer.create({
+          container: container,
+          url: nativeAudio.getAttribute('src'),
+          height: 64,
+          waveColor: '#e9e9e9',
+          progressColor: '#111111',
+          cursorColor: '#111111',
+          cursorWidth: 2,
+          barWidth: 2,
+          barGap: 1,
+          barRadius: 2,
+          dragToSeek: true,
+          fillParent: true,
+          hideScrollbar: true,
+        });
+
+        // 原生播放器已由波形播放器接管，隐藏之
+        nativeAudio.hidden = true;
+        playerEl.hidden = false;
+
+        function fmt(sec) {
+          sec = Math.floor(sec || 0);
+          if (!isFinite(sec) || sec < 0) sec = 0;
+          var m = Math.floor(sec / 60);
+          var s = sec % 60;
+          return m + ':' + (s < 10 ? '0' : '') + s;
+        }
+        function setPlaying(on) {
+          playerEl.classList.toggle('is-playing', !!on);
+          playBtn.setAttribute('aria-pressed', on ? 'true' : 'false');
+          playBtn.setAttribute('aria-label', on ? '暂停' : '播放');
+        }
+
+        ws.on('ready', function () { durEl.textContent = fmt(ws.getDuration()); });
+        ws.on('timeupdate', function (t) { curEl.textContent = fmt(t); });
+        ws.on('play', function () { setPlaying(true); });
+        ws.on('pause', function () { setPlaying(false); });
+        ws.on('finish', function () { setPlaying(false); });
+        playBtn.addEventListener('click', function () { ws.playPause(); });
+      } catch (err) {
+        // 波形播放器加载/初始化失败：保持原生播放器可用
+        console.warn('波形播放器加载失败，已回退原生播放器', err);
+      }
     })();
   </script>
 </body>
