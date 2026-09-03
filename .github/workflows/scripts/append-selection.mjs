@@ -59,7 +59,12 @@ const title = (sec['标题'] || issueTitle || '').trim();
 
 const theme = sec['主题 tag'] || '其他';
 const text = sec['正文文本'] || '';
-const note = sec['编者批注（可选）'] || '';
+// 编者批注（note）：从表单「### 编者批注（可选）」提取，可能含多段/换行
+// 将 \r\n、\r 统一规整为 \n（跨平台安全），再交给 stringifyMarkdownItem 序列化
+const note = (sec['编者批注（可选）'] || '')
+  .replace(/\r\n/g, '\n')
+  .replace(/\r/g, '\n')
+  .trim();
 const source = sec['原始出处'] || '';
 const audioRaw = sec['音频（可选）'] || '';
 const linksRaw = sec['外链（可选）'] || '';
@@ -209,6 +214,14 @@ fs.writeFileSync(destFile, mdText);
 const back = parseMarkdownItem(fs.readFileSync(destFile, 'utf8'));
 if (back.id !== newId || !back.text) {
   console.error('自校验失败：新文件无法被正确解析为选读条目。');
+  process.exit(1);
+}
+// 编者批注（note）含换行时，须逐字回读校验，确保多行内容不被静默丢失
+if (note && back.note !== note) {
+  console.error('自校验失败：note 多行内容回读不一致。');
+  console.error('  - 期望 note:', JSON.stringify(note));
+  console.error('  - 回读 note:', JSON.stringify(back.note));
+  console.error('  请检查 essence-md.js 的 stringifyMarkdownItem / parseYamlSubset 是否正确处理块标量。');
   process.exit(1);
 }
 

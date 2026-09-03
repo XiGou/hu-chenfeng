@@ -81,8 +81,19 @@ export function parseMarkdownItem(raw) {
 export function stringifyMarkdownItem(item) {
   const lines = ['---'];
   const put = (k, v) => {
-    if (v !== undefined && v !== null && String(v).trim() !== '') {
-      lines.push(`${k}: ${String(v).trim()}`);
+    if (v === undefined || v === null || String(v).trim() === '') return;
+    // 规整换行（\r\n / \r → \n），避免 YAML 块标量中残留 CR
+    const val = String(v).replace(/\r\n/g, '\n').replace(/\r/g, '\n').trim();
+    if (val.includes('\n')) {
+      // 多行值（如编者批注 note 含换行/分段）→ YAML 字面量块标量
+      const indented = val
+        .split('\n')
+        .map((l) => (l === '' ? '' : '  ' + l))
+        .join('\n');
+      lines.push(`${k}: |-`);
+      if (indented) lines.push(indented);
+    } else {
+      lines.push(`${k}: ${val}`);
     }
   };
   put('id', item.id);
@@ -144,12 +155,69 @@ function parseYamlSubset(text) {
         out[key] = null;
         i++;
       }
+    } else if (/^[|>][-+]?$/.test(val)) {
+      // 多行标量（字面量 | 或折叠 >）：值由后续缩进行组成
+      const [blockValue, consumed] = parseBlockScalar(lines, i + 1, val);
+      out[key] = blockValue;
+      i += consumed;
     } else {
       out[key] = parseScalar(val);
       i++;
     }
   }
   return out;
+}
+
+/**
+ * 解析 YAML 块标量（字面量 | 或折叠 >）的后续缩进行。
+ * @returns {[string, number]} [解析出的值, 消费的行数(含块内行，不含下一键行)]
+ */
+function parseBlockScalar(lines, startIdx, indicator) {
+  // 块内容行相对 front-matter 顶层键（第 0 列）缩进，取首个非空内容行的缩进为基准
+  let i = startIdx;
+  let indent = -1;
+  while (i < lines.length) {
+    const ln = lines[i];
+    if (ln.trim() === '') { i++; continue; }
+    indent = ln.match(/^ */)[0].length;
+    break;
+  }
+  if (indent < 0) return ['', i - startIdx];
+  const rows = [];
+  while (i < lines.length) {
+    const ln = lines[i];
+    const curIndent = ln.match(/^ */)[0].length;
+    if (ln.trim() !== '' && curIndent < indent) break; // 缩进不足 → 回到顶层键
+    if (ln.trim() === '') {
+      // 空行：缩进至少达到基准才视为块内空行，否则可能是块后的分隔行
+      rows.push('');
+      i++;
+      continue;
+    }
+    rows.push(ln.slice(indent));
+    i++;
+  }
+  // 折叠（>）：空行为段落分隔，段内连续非空行以空格连接
+  const folded = indicator[0] === '>';
+  let value;
+  if (folded) {
+    const paras = [];
+    let buf = [];
+    for (const r of rows) {
+      if (r === '') {
+        if (buf.length) paras.push(buf.join(' '));
+        buf = [];
+      } else {
+        buf.push(r);
+      }
+    }
+    if (buf.length) paras.push(buf.join(' '));
+    value = paras.join('\n');
+  } else {
+    value = rows.join('\n');
+  }
+  // 字符剪除：'-' 去尾换行 / '+' 保尾换行 / 默认单个尾换行——统一 trim 尾空白即可
+  return [value.replace(/\n+$/, ''), i - startIdx];
 }
 
 function consumeList(lines, startIdx) {
