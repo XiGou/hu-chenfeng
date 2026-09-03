@@ -9,10 +9,11 @@
 #   4. 同步代码 —— 将代码自动推送到 GitHub 同名仓库（XiGou/hu-chenfeng）
 #
 # 【站点地址 SITE_URL】
-#   分享页的 og:url / twitter:player 等 meta 需要绝对 URL。可通过以下方式配置：
+#   分享页 og meta 默认走相对路径 + 运行时 location 补齐，产物保持域名无关，
+#   同一份 dist 可复用于任意站点域名部署。
+#   如需绝对 https（供 X/Twitter 等不执行 JS 的爬虫出预览卡片），可用以下方式配置：
 #   - 流水线环境变量 SITE_URL（优先），例如 https://hu-chenfeng.example.com
-#   - 若未配置 SITE_URL，则回退用 COS_BUCKET 自动推导（https://<bucket>/）
-#   - 二者均未配置时，分享页会在浏览器运行时用 location 自动补齐
+#   - 配置 COS_BUCKET 时自动推导为 https://<bucket>/
 #
 # 【COS 部署说明】
 #   部署到 COS 需要配置以下环境变量（可在 CNB「仓库设置 → 流水线环境变量」
@@ -61,17 +62,15 @@ main:
             npm ci
 
             echo "==> 确定站点绝对地址（供分享页 og/twitter meta 使用）"
-            # 优先级：环境变量 SITE_URL > COS_BUCKET 自动推导 > 生产站点域名默认值
-            # 注意：X/Twitter 等平台的爬虫不执行 JS，og:url/og:image/og:audio 必须烘成绝对 https，
-            #       否则无法生成预览卡片。线上站点固定为 https://hu-chenfeng.19960312.xyz
+            # 优先级：环境变量 SITE_URL > COS_BUCKET 自动推导
+            # 均未配置时产物保持域名无关，og meta 走相对路径 + 运行时 location 补齐
             if [ -n "$SITE_URL" ]; then
               echo "    使用环境变量 SITE_URL=$SITE_URL"
             elif [ -n "$COS_BUCKET" ]; then
               export SITE_URL="https://${COS_BUCKET}"
               echo "    使用 COS_BUCKET 推导 SITE_URL=$SITE_URL"
             else
-              export SITE_URL="https://hu-chenfeng.19960312.xyz"
-              echo "    未配置 SITE_URL/COS_BUCKET，使用生产站点默认 SITE_URL=$SITE_URL"
+              echo "    未配置 SITE_URL/COS_BUCKET，产物域名无关（相对路径 + 运行时补齐）"
             fi
 
             echo "==> Vite 生产构建（含分享页生成）"
