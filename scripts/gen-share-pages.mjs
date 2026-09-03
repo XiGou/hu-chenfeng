@@ -4,8 +4,8 @@
  *
  * 读取 src/data/essence/<id>.md（front-matter + 正文），为每条生成
  *   dist/选读/<id>.html
- * 一个可直接独立访问的静态详情页（既是站内详情，也可作为分享/被爬取的地址，
- * 无需再单独维护一套“给 X 用的分享页”）。页面内嵌：
+ * 一个可直接独立访问的静态详情页（既是站内详情，也是「分享」的载体——
+ * 复制地址栏即可分享，无需单独维护“给 X 用的分享页”）。页面内嵌：
  *   - OG / Twitter Card meta：og:title/description/audio，以及 og:image/twitter:image
  *     —— 预览图从 public/gallery/ 里按选读 id 确定性随机任选一张；
  *   - Twitter 卡片用 summary_large_image（X 无需白名单即可稳定出“大图+标题”预览，
@@ -15,6 +15,8 @@
  *     供支持视频内嵌预览的平台（如 X、部分 IM / 社交）展示；网页内仍用纯 <audio> 播放、不嵌视频。
  *   - 波形播放器（基于 Wavesurfer.js v7，含波形 + 播放/暂停 + 点按跳转 + 播放着色进度，
  *     无 JS 时自动回退为原生 <audio controls>）+ 展厅预览图 + 标题/日期/主题/正文（含 video/links 媒体）
+ *   - 分享操作条：底部「复制链接」（复制无 .html 的 canonical 干净地址）与「分享到 X」
+ *     （X(Twitter) intent 带标题+链接跳转发推），让分享只需复制/一点即可完成
  *
  * 另外会给首页 dist/index.html 补写基础 OG/Twitter meta（含一张 gallery 预览图），
  * 使“分享站点首页”也能出预览卡片。
@@ -276,6 +278,8 @@ function buildShareHtml(item) {
   // 页面的站点相对地址（og:url 用；配 SITE_URL 时烘成绝对 https）
   const pageRel = `${DIR_NAME}/${id}.html`;
   const ogUrl = SITE_URL ? `${SITE_URL}/${pageRel}` : pageRel;
+  // 分享用的 canonical 干净地址（无 .html 后缀，避免 308 重定向、利于发推出卡片）
+  const shareCleanUrl = SITE_URL ? `${SITE_URL}/${DIR_NAME}/${id}` : '';
   // 主题标签 HTML
   const themeHtml = themes.length
     ? themes.map((t) => `<span class="tag">${escHtml(t)}</span>`).join('')
@@ -548,6 +552,44 @@ function buildShareHtml(item) {
     }
     .audio-hint { display: none; }
 
+    /* 分享操作条：复制链接 / 分享到 X */
+    .share-bar {
+      margin: 30px 0 4px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .share-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 8px 16px;
+      border-radius: 999px;
+      font-size: 14px;
+      font-weight: 500;
+      line-height: 1.4;
+      font-family: inherit;
+      border: 1px solid #ececec;
+      background: #fff;
+      color: #333;
+      cursor: pointer;
+      text-decoration: none;
+      transition: border-color .15s ease, background .15s ease, color .15s ease;
+    }
+    .share-btn svg { width: 15px; height: 15px; flex: none; }
+    .share-btn:hover { border-color: #111; color: #111; background: #fafafa; }
+    .share-btn.tweet {
+      background: #111;
+      border-color: #111;
+      color: #fff;
+    }
+    .share-btn.tweet:hover { background: #333; border-color: #333; color: #fff; }
+    .share-bar-note {
+      width: 100%;
+      font-size: 12px;
+      color: #aaa;
+      margin-top: 2px;
+    }
     /* 正文 */
     .content {
       font-size: 17px;
@@ -668,6 +710,18 @@ function buildShareHtml(item) {
 
     ${source ? `<div class="source">出处：${escHtml(source)}</div>` : ''}
 
+    <div class="share-bar" role="group" aria-label="分享">
+      <button type="button" class="share-btn" data-share-copy>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M16 1H4a2 2 0 0 0-2 2v14h2V3h12V1zm3 4H8a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2zm0 16H8V7h11v14z"/></svg>
+        <span data-share-copy-label>复制链接</span>
+      </button>
+      <a class="share-btn tweet" data-share-tweet href="#" target="_blank" rel="noopener noreferrer">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+        分享到 X
+      </a>
+      <span class="share-bar-note">分享用当前干净地址（无 .html 后缀），直接发推即可出卡片</span>
+    </div>
+
     <a class="back-link" href="${escHtml(backHref)}">← 返回全部选读</a>
 
     <footer>户晨风 · 摘录 — 安静阅读，边读边听。</footer>
@@ -772,6 +826,62 @@ function buildShareHtml(item) {
       } catch (err) {
         // 波形播放器加载/初始化失败：保持原生播放器可用
         console.warn('波形播放器加载失败，已回退原生播放器', err);
+      }
+    })();
+  </script>
+
+  <script>
+    // 分享操作条：复制当前 canonical 链接 / 跳转 X(Twitter) 发推。
+    // canonical 统一为「无 .html」的干净地址（Cloudflare 等对 .html 走 308，
+    // 去掉后缀既是规范地址、也避免分享时被爬虫因重定向折成纯文本）。
+    (function () {
+      var title = ${JSON.stringify(displayTitle)};
+      // canonical：优先构建期 SITE_URL 绝对地址；否则用地址栏并去掉可能残留的 .html
+      var url = ${JSON.stringify(shareCleanUrl)};
+      var btn = document.querySelector('[data-share-copy]');
+      var label = btn && btn.querySelector('[data-share-copy-label]');
+      var tweet = document.querySelector('[data-share-tweet]');
+
+      function canonical() {
+        var base = location.href.split('#')[0].split('?')[0];
+        return base.replace(/\\.html$/i, '');
+      }
+      if (!url || url === '') url = canonical();
+
+      if (tweet) {
+        var intent = 'https://twitter.com/intent/tweet?text=' +
+          encodeURIComponent(title) + '&url=' + encodeURIComponent(url);
+        tweet.setAttribute('href', intent);
+      }
+
+      if (btn && label) {
+        var restore = function () {
+          label.textContent = '复制链接';
+        };
+        var flash = function (ok) {
+          label.textContent = ok ? '已复制 ✓' : '复制失败';
+          setTimeout(restore, 2000);
+        };
+        btn.addEventListener('click', function () {
+          var done = function () { flash(true); };
+          var fail = function () { flash(false); };
+          function legacyCopy() {
+            var ta = document.createElement('textarea');
+            ta.value = url;
+            ta.style.position = 'fixed';
+            ta.style.opacity = '0';
+            document.body.appendChild(ta);
+            ta.select();
+            try { document.execCommand('copy'); done(); }
+            catch (e) { fail(); }
+            document.body.removeChild(ta);
+          }
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(url).then(done, legacyCopy);
+          } else {
+            legacyCopy();
+          }
+        });
       }
     })();
   </script>
