@@ -47,7 +47,7 @@ const OUT_DIR = process.env.OUT_DIR || path.join(ROOT, 'dist');
 // 如确实需要绝对 https（X/Twitter 爬虫不执行 JS），请在构建时通过环境变量 SITE_URL 显式指定。
 const _DEFAULT_SITE = '';
 const SITE_URL = (process.env.SITE_URL || _DEFAULT_SITE).trim().replace(/\/+$/, '');
-// 分享页目录名：路径形如 站点/选读/1.html
+// 分享页目录名：canonical 干净路径形如 站点/选读/1（实际文件为 站点/选读/1.html）
 const DIR_NAME = '选读';
 // 复用仓库的 front-matter 解析器（纯函数）
 import { parseMarkdownItem } from '../src/data/lib/essence-md.js';
@@ -283,11 +283,13 @@ function buildShareHtml(item) {
     audioAbsUrl = absoluteAudioUrl(audioClean, SITE_URL, relRoot);
   }
 
-  // 页面的站点相对地址（og:url 用；配 SITE_URL 时烘成绝对 https）
-  const pageRel = `${DIR_NAME}/${id}.html`;
-  const ogUrl = SITE_URL ? `${SITE_URL}/${pageRel}` : pageRel;
-  // 分享用的 canonical 干净地址（无 .html 后缀，避免 308 重定向、利于发推出卡片）
-  const shareCleanUrl = SITE_URL ? `${SITE_URL}/${DIR_NAME}/${id}` : '';
+  // 页面的 canonical 干净地址（无 .html 后缀）：og:url 与分享链接统一用它。
+  // GitHub Pages 与 Cloudflare 均支持「无后缀路径 → 解析对应 .html」，配 SITE_URL 时
+  // 烘成绝对 https；避免 CF 对 .html 走 308 重定向、爬虫不跟进而退化成纯标题预览。
+  const pageCleanPath = `${DIR_NAME}/${id}`;
+  const ogUrl = SITE_URL ? `${SITE_URL}/${pageCleanPath}` : pageCleanPath;
+  // 分享用的 canonical 干净地址（同 og:url，无 .html 后缀）
+  const shareCleanUrl = SITE_URL ? `${SITE_URL}/${pageCleanPath}` : '';
   // 主题标签 HTML
   const themeHtml = themes.length
     ? themes.map((t) => `<span class="tag">${escHtml(t)}</span>`).join('')
@@ -737,7 +739,7 @@ function buildShareHtml(item) {
     // 无 SITE_URL 时，运行时用当前页面的 location 将相对 URL 补齐为绝对地址
     //（对不执行 JS 的 X 爬虫无效，仅作浏览器/支持渲染的抓取兜底；
     //  生产建议在构建时配置 SITE_URL，让 og:url/og:image 直接烘成绝对 https）。
-    // og:url 为「相对站点根的路径」（如 选读/1.html）；
+    // og:url 为「相对站点根的 canonical 路径」（如 选读/1，不带 .html 后缀）；
     // og:audio / og:image 为「相对本页目录的路径」
     //（如 ../audio/quotes/x.mp3、../og-cards/<id>.png、../gallery/imgN.png）。
     // 相对路径以当前页面目录补齐，可兼容任意子路径部署（GitHub Pages /hu-chenfeng/ 等）。
@@ -763,7 +765,7 @@ function buildShareHtml(item) {
         root += '/' + pathParts[i];
       }
       root += '/';
-      // og:url —— 相对站点根（如 选读/1.html）
+      // og:url —— 相对站点根的 canonical 路径（如 选读/1，不带 .html）
       patch('meta[property="og:url"]', root);
       // og:audio / og:image —— 相对当前页目录的路径。以 pageDir 补齐，
       // 使其跟随「当前页面所在子路径」（兼容 GitHub Pages 子路径 /hu-chenfeng/ 等部署）
@@ -924,7 +926,8 @@ function injectIndexOg() {
 
   if (hasOgTitle) return; // 已注入过
 
-  const ogUrl = SITE_URL ? `${SITE_URL}/index.html` : 'index.html';
+  // 首页 og:url — canonical 指向站点根（配 SITE_URL 时绝对 https；未配时为相对 index.html）
+  const ogUrl = SITE_URL ? `${SITE_URL}` : 'index.html';
 
   // og:image 选择：优先用站点专属的 og-card（og-cards/0.png，标题=站点名）；
   // 若无则退化为选首条选读的卡片，再退化为 landscape 向 gallery 图。
