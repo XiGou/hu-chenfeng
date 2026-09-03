@@ -38,10 +38,10 @@ jobs:
   # 1. 构建：使用 Vite 打包生成静态产物
   build:
     runs-on: ubuntu-latest
-    # 生产站点绝对地址：让分享页 og:url/og:image/og:audio 烘成绝对 https。
-    # X/Twitter 爬虫不执行 JS，不配会退化成相对路径而无法出预览卡片。
-    env:
-      SITE_URL: https://hu-chenfeng.19960312.xyz
+    # 产物保持域名无关：不写死 SITE_URL，同一份 dist 可同时部署到
+    # GitHub Pages / Cloudflare Pages 等任意域名。og meta 走相对路径，
+    # 页面运行时用 location 自动补齐。如需绝对 https 供 X 爬虫出预览卡，
+    # 可在 GitHub Actions Secrets 配置 SITE_URL 环境变量显式注入。
     steps:
       - name: 检出代码
         uses: actions/checkout@v4
