@@ -10,6 +10,7 @@
 //   date: 2025-01-14
 //   theme: 节奏
 //   source: reference/hu-chenfeng/2025年01月/2025-01-14.md
+//   note: 编者批注……            # 可选 · 展示在选读页面顶部的编者批注
 //   audio: audio/quotes/2025-01-14.mp3    # 站点资源路径（相对 public），可选
 //   video: https://...                     # 外链视频，可选
 //   links:                                 # 可选
@@ -32,7 +33,7 @@
  * 将单条选读的 Markdown 原始文本解析为对象。
  * @param {string} raw
  * @returns {{id?:number, title?:string, date?:string, theme?:string, text:string,
- *            source?:string, audio?:string, video?:string, links?:object[]}}
+ *            source?:string, audio?:string, video?:string, links?:object[], note?:string}}
  */
 export function parseMarkdownItem(raw) {
   const m = /^---\r?\n([\s\S]*?)\r?\n---[ \t]*\r?\n?([\s\S]*)$/.exec(raw);
@@ -47,7 +48,7 @@ export function parseMarkdownItem(raw) {
     item.id = Number(meta.id);
     if (Number.isNaN(item.id)) throw new Error('id 字段必须是数字');
   }
-  for (const k of ['title', 'date', 'theme', 'source']) {
+  for (const k of ['title', 'date', 'theme', 'source', 'note']) {
     const v = meta[k];
     if (v !== undefined && v !== null && String(v).trim() !== '') {
       item[k] = String(v).trim();
@@ -74,7 +75,7 @@ export function parseMarkdownItem(raw) {
 /**
  * 将一条选读对象序列化为 Markdown 文本（含 front-matter 与正文）。
  * 供 append-selection.mjs 在新增选读时生成独立文件。
- * @param {object} item 需含 id/theme/text；title/date/source/audio/video/links 可选
+ * @param {object} item 需含 id/theme/text；title/date/source/note/audio/video/links 可选
  * @returns {string}
  */
 export function stringifyMarkdownItem(item) {
@@ -89,6 +90,7 @@ export function stringifyMarkdownItem(item) {
   put('date', item.date);
   put('theme', item.theme);
   put('source', item.source);
+  put('note', item.note);
   put('audio', item.audio);
   put('video', item.video);
   if (Array.isArray(item.links) && item.links.length) {

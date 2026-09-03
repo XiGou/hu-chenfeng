@@ -59,6 +59,7 @@ const title = (sec['标题'] || issueTitle || '').trim();
 
 const theme = sec['主题 tag'] || '其他';
 const text = sec['正文文本'] || '';
+const note = sec['编者批注（可选）'] || '';
 const source = sec['原始出处'] || '';
 const audioRaw = sec['音频（可选）'] || '';
 const linksRaw = sec['外链（可选）'] || '';
@@ -196,7 +197,7 @@ const audioBaseName = slugifyBase(title) || `selection-${newId}`;
 const audio = await resolveAudio(audioRaw, audioBaseName);
 
 // ================= 生成单文件 Markdown 并写入 =================
-const item = { id: newId, title: title || undefined, date: undefined, theme, text, source, audio, links };
+const item = { id: newId, title: title || undefined, date: undefined, theme, text, source, note: note || undefined, audio, links };
 const mdText = stringifyMarkdownItem(item);
 const destFile = path.join(ESSENCE_DIR, `${newId}.md`);
 

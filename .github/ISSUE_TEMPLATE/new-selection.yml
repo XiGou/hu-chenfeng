@@ -35,6 +35,18 @@ body:
       required: true
 
   - type: textarea
+    id: note
+    attributes:
+      label: 编者批注（可选）
+      description: >-
+        选读下方（页面顶部）的编者批注，可补充说明该条选读的背景、立场与阅读提示；
+        字段缺失时不展示。多行时每行会自动换行显示。
+      placeholder: |
+        可选，例如：本条反映户子一贯的「购买力 / 就业」底色，慎读。
+    validations:
+      required: false
+
+  - type: textarea
     id: text
     attributes:
       label: 正文文本
