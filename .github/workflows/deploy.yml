@@ -52,7 +52,7 @@ jobs:
           node-version: 20
           cache: npm
 
-      - name: 安装 ffmpeg + CJK 字体（合成选读 og:video 与 og:image 社交卡片）
+      - name: 安装 ffmpeg + CJK 字体（合成选读 og:image 社交分享卡片）
         run: sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg fonts-noto-cjk
 
       - name: 安装依赖

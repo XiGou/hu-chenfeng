@@ -41,7 +41,7 @@ npm run preview  # 预览构建产物
 
 通过根目录 `.cnb.yml` 流水线，push 到 `main` 分支自动构建并部署：
 
-- **构建**：`vite build` → `pre-render.mjs`（SSR 预渲染）→ `gen-quote-videos` → `gen-og-cards` → `gen-share-pages`
+- **构建**：`vite build` → `pre-render.mjs`（SSR 预渲染）→ `gen-og-cards` → `gen-share-pages`
 - **公网部署**：将 `dist/` 静态产物同步到腾讯云 COS 对象存储
 
 > **路径兼容**：构建产物中的资源（JS / CSS / 音频 / BGM）均使用**相对路径**引用（`vite.config.js` 中 `base: "./"`），`dist/` 可部署到任意位置（GitHub Pages 子路径 / COS / Cloudflare Pages）。
@@ -57,8 +57,7 @@ npm run preview  # 预览构建产物
 ├── scripts/
 │   ├── pre-render.mjs          # SSR 预渲染脚本（生成全量静态 HTML）
 │   ├── gen-og-cards.mjs       # og:image 社交卡片生成器（1200×630）
-│   ├── gen-share-pages.mjs     # 选读详情页生成器
-│   └── gen-quote-videos.mjs    # ffmpeg 合成视频
+│   └── gen-share-pages.mjs     # 选读详情页生成器
 ├── src/
 │   ├── layout/
 │   │   └── PageShell.vue       # 共享页面骨架（页头 + 栏目导航 + BGM）
@@ -104,4 +103,3 @@ npm run preview  # 预览构建产物
 | `/quotations.html` | 语录 —— 按主题辑录的言论小文章 |
 | `/gallery.html` | 展厅 —— 图像资料集锦 |
 | `/选读/<id>.html` | 选读详情页（独立静态页，分享用） |
-| `/videos/quotes/<id>.mp4` | 选读视频（og:video 直链） |

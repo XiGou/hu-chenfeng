@@ -50,11 +50,11 @@ main:
             echo "==> 初始化 submodule（HuChenFeng 参考仓库）"
             git submodule update --init --recursive || echo "警告：submodule 初始化失败，跳过（构建不依赖其内容）"
 
-            echo "==> 安装 ffmpeg（用于合成 og:video 视频与 og:image 社交卡片图）"
+            echo "==> 安装 ffmpeg（用于合成 og:image 社交分享卡片图；已取消选读视频合成）"
             echo "    + fonts-noto-cjk（CJK 字体，供 ffmpeg drawtext 渲染中文标题）"
             (apt-get update -qq && apt-get install -y -qq ffmpeg fonts-noto-cjk >/dev/null 2>&1) \
-              || echo "警告：ffmpeg / CJK 字体安装失败，跳过视频与卡片生成（其余不受影响）"
-            ffmpeg -version >/dev/null 2>&1 && echo "    ffmpeg 就绪 ✔" || echo "    ffmpeg 不可用（跳过视频/卡片）"
+              || echo "警告：ffmpeg / CJK 字体安装失败，跳过卡片生成（其余不受影响）"
+            ffmpeg -version >/dev/null 2>&1 && echo "    ffmpeg 就绪 ✔" || echo "    ffmpeg 不可用（跳过卡片）"
             ls /usr/share/fonts/opentype/noto/NotoSansCJK-*.ttc >/dev/null 2>&1 \
               && echo "    CJK 字体就绪 ✔" || echo "    CJK 字体不可用（跳过卡片）"
 
