@@ -684,7 +684,7 @@ function buildShareHtml(item) {
     ${note ? `
     <div class="editor-note" role="note">
       <span class="editor-note-mark">编者注</span>
-      <p>${escHtml(note)}</p>
+      <p>${escHtml(note).replace(/\n/g, '<br>')}</p>
     </div>` : ''}
 
     ${imageRelUrl ? `
