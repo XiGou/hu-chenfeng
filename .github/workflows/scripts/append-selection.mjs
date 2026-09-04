@@ -65,7 +65,9 @@ const note = (sec['编者批注（可选）'] || '')
   .replace(/\r\n/g, '\n')
   .replace(/\r/g, '\n')
   .trim();
-const source = sec['原始出处'] || '';
+// 「（可选）」表单项空时 GitHub 返回占位符 _No response_，按空处理
+const rawSource = (sec['原始出处'] || '').trim();
+const source = !rawSource || /^_No response_$/i.test(rawSource) ? '' : rawSource;
 const audioRaw = sec['音频（可选）'] || '';
 const linksRaw = sec['外链（可选）'] || '';
 

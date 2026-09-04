@@ -8,14 +8,13 @@
  * 需传入音频的「页面相对 URL」src（外链则直接使用），及 Wavesurfer
  * 模块的「页面相对 URL」moduleUrl。
  */
-import { ref, onMounted } from "vue";
+import { ref, onMounted, onBeforeUnmount } from "vue";
 
 const props = defineProps({
   src: { type: String, default: "" },
   moduleUrl: { type: String, default: "" },
 });
 
-const waveEl = ref(null);
 const playBtn = ref(null);
 const curEl = ref(null);
 const durEl = ref(null);
@@ -23,6 +22,8 @@ const waveBox = ref(null);
 const nativeAudio = ref(null);
 
 const playing = ref(false);
+// 波形播放器是否已成功接管（true 时隐藏原生播放器、显示波形）
+const showWave = ref(false);
 
 function fmt(sec) {
   const s = Math.floor(sec || 0);
@@ -32,12 +33,14 @@ function fmt(sec) {
   return m + ":" + String(r).padStart(2, "0");
 }
 
+let wsInstance = null;
+
 async function upgrade() {
   const container = waveBox.value;
   if (!container || !nativeAudio.value || !props.src) return;
   try {
     const WaveSurfer = (await import(/* @vite-ignore */ props.moduleUrl)).default;
-    const ws = WaveSurfer.create({
+    const ws = wsInstance = WaveSurfer.create({
       container,
       url: props.src,
       height: 64,
@@ -52,7 +55,7 @@ async function upgrade() {
       fillParent: true,
       hideScrollbar: true,
     });
-    nativeAudio.value.hidden = true;
+    showWave.value = true;
     ws.on("ready", () => { if (durEl.value) durEl.value.textContent = fmt(ws.getDuration()); });
     ws.on("timeupdate", (t) => { if (curEl.value) curEl.value.textContent = fmt(t); });
     ws.on("play", () => (playing.value = true));
@@ -62,20 +65,23 @@ async function upgrade() {
       playBtn.value.addEventListener("click", () => ws.playPause());
     }
   } catch (err) {
+    // 加载失败 → 保持原生播放器可用（波形框维持隐藏）
     console.warn("波形播放器加载失败，已回退原生播放器", err);
+    showWave.value = false;
   }
 }
 
 onMounted(upgrade);
+onBeforeUnmount(() => { if (wsInstance) { try { wsInstance.destroy(); } catch {} wsInstance = null; } });
 </script>
 
 <template>
   <div class="wave-audio">
-    <!-- 无 JS / 加载失败兜底：原生播放器 -->
-    <audio ref="nativeAudio" controls preload="metadata" :src="src"></audio>
+    <!-- 无 JS / 波形加载失败兜底：原生播放器（波形接管成功后隐藏） -->
+    <audio ref="nativeAudio" controls preload="metadata" :src="src" :hidden="showWave"></audio>
 
-    <!-- 波形播放器容器（默认隐藏，JS 接管后显示） -->
-    <div ref="waveBox" class="wave-box" hidden>
+    <!-- 波形播放器容器（默认隐藏，波形接管成功后显示） -->
+    <div ref="waveBox" class="wave-box" :hidden="!showWave">
       <div class="wave-bar">
         <button ref="playBtn" type="button" class="wave-play" aria-label="播放">
           <span v-if="!playing" class="wave-ico wave-ico-play" aria-hidden="true">▶</span>
@@ -91,8 +97,7 @@ onMounted(upgrade);
 </template>
 
 <style scoped>
-.audio-native-hidden,
-.wave-audio audio[hidden] { display: none; }
+.wave-audio audio[hidden] { display: none !important; }
 .wave-box { margin-top: 0.4rem; }
 .wave-bar {
   display: flex;
