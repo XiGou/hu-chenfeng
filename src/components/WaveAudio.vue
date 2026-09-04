@@ -7,12 +7,20 @@
  *   - 加载成功 → 波形可视化（点击跳转 + 播放着色进度）
  * 需传入音频的「页面相对 URL」src（外链则直接使用），及 Wavesurfer
  * 模块的「页面相对 URL」moduleUrl。
+ *
+ * 连播（#86）：props.mode 为 "seq" | "random" 时（详情页传入）：
+ *   - hydration 后自动开播（等波形模块就绪，失败则回退原生播放器）
+ *   - 音频播完 → 经 audio-registry 幂等汇总 → 由 EssenceDetail 连播下一条
+ *   - mode 为 "off" 时行为与原版完全一致，不自动播放、不跳转。
  */
-import { ref, onMounted } from "vue";
+import { ref, onMounted, onBeforeUnmount } from "vue";
+import { bindNativeAudio, feedEnded } from "../data/lib/audio-registry.js";
 
 const props = defineProps({
   src: { type: String, default: "" },
   moduleUrl: { type: String, default: "" },
+  /** 连播模式：off | seq | random（详情页按 localStorage 状态传入） */
+  mode: { type: String, default: "off" },
 });
 
 const waveEl = ref(null);
@@ -32,12 +40,15 @@ function fmt(sec) {
   return m + ":" + String(r).padStart(2, "0");
 }
 
+let ws = null;
+let waveFailed = false;
+
 async function upgrade() {
   const container = waveBox.value;
   if (!container || !nativeAudio.value || !props.src) return;
   try {
     const WaveSurfer = (await import(/* @vite-ignore */ props.moduleUrl)).default;
-    const ws = WaveSurfer.create({
+    ws = WaveSurfer.create({
       container,
       url: props.src,
       height: 64,
@@ -57,16 +68,48 @@ async function upgrade() {
     ws.on("timeupdate", (t) => { if (curEl.value) curEl.value.textContent = fmt(t); });
     ws.on("play", () => (playing.value = true));
     ws.on("pause", () => (playing.value = false));
-    ws.on("finish", () => (playing.value = false));
+    // 连播：波形播放器播完 → 汇总触发（原生路径由 audio-registry 监听 ended）
+    if (props.mode !== "off") ws.on("finish", () => feedEnded());
     if (playBtn.value) {
       playBtn.value.addEventListener("click", () => ws.playPause());
     }
   } catch (err) {
     console.warn("波形播放器加载失败，已回退原生播放器", err);
+    ws = null;
+    waveFailed = true;
   }
 }
 
-onMounted(upgrade);
+/** 连播自动开播：轮询等波形模块就绪（≤6s），失败则回退原生播放器。 */
+function tryAutoplay(attempt) {
+  if (props.mode === "off") return;
+  if (ws) {
+    ws.play();
+    return;
+  }
+  if (waveFailed) {
+    if (nativeAudio.value) nativeAudio.value.play().catch(() => {});
+    return;
+  }
+  if (attempt > 20) return;
+  setTimeout(() => tryAutoplay(attempt + 1), 300);
+}
+
+onMounted(() => {
+  // 连播：登记原生 <audio> 的 ended 事件（与波形 finish 汇总，幂等）
+  if (props.mode !== "off" && props.src) {
+    bindNativeAudio(nativeAudio.value);
+  }
+  upgrade();
+  if (props.mode !== "off") tryAutoplay(0);
+});
+
+onBeforeUnmount(() => {
+  if (ws) {
+    try { ws.unAll(); ws.destroy(); } catch (e) { /* 忽略 */ }
+    ws = null;
+  }
+});
 </script>
 
 <template>

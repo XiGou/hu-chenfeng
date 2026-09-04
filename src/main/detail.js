@@ -3,14 +3,19 @@
  *
  * 详情页为「独立静态页」，每条对应一份选读/<id>.html。构建期已把每条详情
  * SSR 内容预渲染进 <div id="app">；本入口在浏览器里 hydration 恢复交互
- * （波形播放器 / 分享操作条）。
+ * （波形播放器 / 分享操作条 / 连播）。
  *
  * 当前 id 从 <div id="app" data-id="N"> 读取；找不到匹配选读时静默降级为
  * 空容器（仅剩 SSR 静态内容，不再重复渲染，避免错位）。
+ *
+ * 连播（#86）：hydration 后读取 localStorage 中的连播模式（off/seq/random）
+ * 传给组件 —— SSR 恒为 off，预渲染 HTML 不含连播状态，自动播放与页面跳转
+ * 本就依赖 JS，无 JS 环境保持纯静态阅读体验。
  */
 import { createSSRApp, createApp } from "vue";
 import EssenceDetail from "../components/EssenceDetail.vue";
 import { essence } from "../data/essence.js";
+import { getMode } from "../data/lib/playback-mode.js";
 import "../styles/main.css";
 
 const el = document.querySelector("#app");
@@ -25,10 +30,11 @@ function mount() {
     // SSR 已含静态内容，仅保留之（无交互）。正常构建不会走到这里。
     return;
   }
+  const mode = getMode();
   if (el.children.length) {
-    createSSRApp(EssenceDetail, { item, relRoot: "../" }).mount(el);
+    createSSRApp(EssenceDetail, { item, relRoot: "../", mode }).mount(el);
   } else {
-    createApp(EssenceDetail, { item, relRoot: "../" }).mount(el);
+    createApp(EssenceDetail, { item, relRoot: "../", mode }).mount(el);
   }
 }
 mount();

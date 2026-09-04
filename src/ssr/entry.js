@@ -8,6 +8,9 @@
  *
  * 此文件由 scripts/pre-render.mjs 经 Vite SSR 构建后加载，import.meta.glob 等
  * 均由 Vite 正确转换，essence 数据在构建期静态内联。
+ *
+ * 注意：连播模式（#86）是浏览器运行时状态（localStorage），SSR 恒按 off 渲染；
+ * hydration 后由入口按实际状态恢复，预渲染 HTML 与状态互不干扰。
  */
 import { createSSRApp } from "vue";
 import { renderToString } from "@vue/server-renderer";
