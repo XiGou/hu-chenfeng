@@ -319,8 +319,8 @@ onBeforeUnmount(() => {
       </section>
 
       <!-- 右：正文 -->
-      <section class="pure-panel">
-        <article class="pure-text" ref="bodyWrap">
+      <section class="pure-panel" ref="bodyWrap">
+        <article class="pure-text">
           <div class="pure-text-note">
             <span class="pure-cat">选读 · Essence</span>
             <span class="pure-date" v-if="current && current.date">{{ current.date }}</span>

@@ -5,16 +5,13 @@
  * 分页（#86）：首页选读数量超过 20 个时自动分页（每页 20 条），页码导航
  * 置于列表底部；检索过滤时隐藏分页、直接展示全部匹配项。
  *
- * 连播（#86）：podcast 式连续播放入口 ——
- *   · 顺序连播：从第 1 条开始逐条自动播放（每条播完自动打开下一条详情页）
- *   · 随机连播：随机一条开始，播完随机跳下一条
- *   · 停止：关闭连播
- * 模式存于 localStorage（playback-mode），详情页 hydration 后据此自动播放。
+ * 连播（#86）体验收敛至「纯享 · 黑胶唱机」（./pure.html，与展厅同级别栏目）：
+ * 本页保持干净的选读目录，不在首页堆叠连播/纯享入口按钮。
+ * 分页能力在此保留（> 20 则时自动分页）。
  */
-import { ref, computed, watch, onMounted, onBeforeUnmount } from "vue";
+import { ref, computed, watch } from "vue";
 import { splitThemes } from "../data/lib/tags.js";
-import { getMode, setMode, MODE_CHANGE_EVENT } from "../data/lib/playback-mode.js";
-import { detailHref, startId } from "../data/lib/playlist.js";
+import { detailHref } from "../data/lib/playlist.js";
 
 const props = defineProps({
   items: { type: Array, required: true },
@@ -47,35 +44,6 @@ function goto(p) {
   page.value = Math.min(Math.max(1, p), totalPages.value);
 }
 
-// ---------- 连播 ----------
-const mode = ref("off"); // SSR 恒为 off；hydration 后同步实际状态
-function syncMode() {
-  mode.value = getMode();
-}
-function startSeq() {
-  const id = startId("seq");
-  if (id === null) return;
-  setMode("seq");
-  window.location.href = detailHref(id);
-}
-function startRandom() {
-  const id = startId("random");
-  if (id === null) return;
-  setMode("random");
-  window.location.href = detailHref(id);
-}
-function stopAll() {
-  setMode("off");
-}
-
-onMounted(() => {
-  syncMode();
-  window.addEventListener(MODE_CHANGE_EVENT, syncMode);
-});
-onBeforeUnmount(() => {
-  window.removeEventListener(MODE_CHANGE_EVENT, syncMode);
-});
-
 function fmtDate(d) {
   if (!d) return "";
   const p = String(d).split("-");
@@ -104,39 +72,6 @@ function itemLabel(q) {
     <p class="vp-note">
       收集各种二创与传播度广的音频、文字与视频，可配上 BGM 当作 podcast 来听——若比之古籍，犹《诗经》之风雅颂，听寻常人讲寻常事。
     </p>
-
-    <!-- 连播入口（podcast 式）：顺序 / 随机 / 停止 -->
-    <div class="pb-entry" role="group" aria-label="连播模式">
-      <button
-        type="button"
-        class="pb-btn"
-        :class="{ active: mode === 'seq' }"
-        @click="startSeq"
-        title="从第 1 条开始按顺序连播，每条播完自动打开下一条"
-      >▶ 顺序连播</button>
-      <button
-        type="button"
-        class="pb-btn"
-        :class="{ active: mode === 'random' }"
-        @click="startRandom"
-        title="随机一条开始连播，播完随机跳下一条"
-      >🔀 随机连播</button>
-      <button
-        type="button"
-        class="pb-btn pb-btn-stop"
-        :class="{ active: mode === 'off' }"
-        :disabled="mode === 'off'"
-        @click="stopAll"
-        title="停止连播"
-      >■ 停止</button>
-    </div>
-
-    <!-- 纯享模式：黑胶唱机沉浸聆听入口 -->
-    <a class="pb-entry-link" href="./pure.html">
-      <span class="pe-disc" aria-hidden="true">◉</span>
-      <span class="pe-text">进入纯享模式 · 黑胶唱机</span>
-      <span class="pe-arrow" aria-hidden="true">→</span>
-    </a>
 
     <p v-if="keyword && items.length === 0" class="search-empty">
       未找到与“{{ keyword }}”匹配的语录
