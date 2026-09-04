@@ -684,39 +684,6 @@ a { color: inherit; }
    连播（podcast 式自动播放）与分页 · #86
    ========================================================================== */
 
-/* ---------- 首页连播入口 ---------- */
-.pb-entry {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  margin: 0 0 1.8rem;
-}
-.pb-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  font-family: inherit;
-  font-size: 0.88rem;
-  color: var(--fg-soft);
-  background: none;
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  padding: 0.45rem 1.1rem;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-.pb-btn:hover { color: var(--fg); border-color: var(--fg-faint); }
-.pb-btn.active {
-  color: #fff;
-  background: var(--accent);
-  border-color: var(--accent);
-}
-.pb-btn:disabled {
-  opacity: 0.45;
-  cursor: default;
-}
-.pb-btn:disabled:hover { color: var(--fg-soft); border-color: var(--line); }
-
 /* ---------- 详情页连播状态条 ---------- */
 .pb-banner {
   display: flex;
@@ -810,32 +777,3 @@ a { color: inherit; }
   cursor: default;
 }
 .pager-btn:disabled:hover { color: var(--fg-soft); border-color: var(--line); }
-
-/* ---------- 首页 · 纯享模式入口 ---------- */
-.pb-entry-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.6rem;
-  text-decoration: none;
-  margin: 0.2rem 0 1.8rem;
-  padding: 0.62rem 1.2rem;
-  color: #1a1a1a;
-  background: linear-gradient(135deg, #1a1a1a, #333);
-  color: #f3efe6;
-  border-radius: 999px;
-  font-size: 0.9rem;
-  letter-spacing: 0.02em;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-  box-shadow: 0 4px 14px rgba(0,0,0,0.18);
-}
-.pb-entry-link:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 6px 18px rgba(0,0,0,0.24);
-}
-.pb-entry-link .pe-disc {
-  font-size: 1.1rem;
-  color: #d9b98a;
-  line-height: 1;
-}
-.pb-entry-link .pe-text { white-space: nowrap; }
-.pb-entry-link .pe-arrow { color: rgba(243,239,230,0.6); }
