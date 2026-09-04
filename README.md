@@ -45,7 +45,7 @@ npm run preview  # 预览构建产物
 
 通过根目录 `.cnb.yml` 流水线，push 到 `main` 分支自动构建并部署：
 
-- **构建**：`vite build` → `gen-og-cards`（社交卡片）→ `pre-render.mjs`（SSR 预渲染列表页 + 选读详情页）
+- **构建**：`vite build` → `pre-render.mjs`（SSR 预渲染列表页 + 选读详情页）
 - **公网部署**：将 `dist/` 静态产物同步到腾讯云 COS 对象存储
 
 > **路径兼容**：构建产物中的页面资源（JS / CSS / 音频 / BGM）均使用**相对路径**引用（`vite.config.js` 中 `base: "./"`），资源文件可适配任意部署位置。
@@ -63,8 +63,7 @@ npm run preview  # 预览构建产物
 ├── pure.html                   # 纯享模式（黑胶唱机）入口 HTML
 ├── vite.config.js              # Vite 配置（MPA 多入口）
 ├── scripts/
-│   ├── pre-render.mjs          # SSR 预渲染（列表页 + 选读详情页 + og 注入）
-│   └── gen-og-cards.mjs        # og:image 社交卡片生成器（1200×630）
+│   └── pre-render.mjs          # SSR 预渲染（列表页 + 选读详情页 + og 注入）
 ├── src/
 │   ├── layout/
 │   │   └── PageShell.vue       # 共享页面骨架（页头 + 栏目导航 + BGM）

@@ -4,7 +4,7 @@
 # 用于在 CNB 平台"直接部署"户晨风语录站点。
 # 站点基于 Vite + Vue 3 构建，本流水线负责：
 #   1. 构建 —— 安装依赖并用 Vite 打包到 dist/
-#   2. 详情页生成 —— og 卡片 + Vue SSR 预渲染每条「选读」详情页（dist/选读/<id>.html）
+#   2. 详情页生成 —— Vue SSR 预渲染每条「选读」详情页（dist/选读/<id>.html）
 #   3. 公网部署 —— 通过腾讯云 COS 对象存储 + 静态网站托管对外提供服务
 #
 # 【站点地址 SITE_URL】
@@ -47,14 +47,6 @@ main:
             set -e
             echo "==> 初始化 submodule（HuChenFeng 参考仓库）"
             git submodule update --init --recursive || echo "警告：submodule 初始化失败，跳过（构建不依赖其内容）"
-
-            echo "==> 安装 ffmpeg（用于合成 og:image 社交分享卡片图；已取消选读视频合成）"
-            echo "    + fonts-noto-cjk（CJK 字体，供 ffmpeg drawtext 渲染中文标题）"
-            (apt-get update -qq && apt-get install -y -qq ffmpeg fonts-noto-cjk >/dev/null 2>&1) \
-              || echo "警告：ffmpeg / CJK 字体安装失败，跳过卡片生成（其余不受影响）"
-            ffmpeg -version >/dev/null 2>&1 && echo "    ffmpeg 就绪 ✔" || echo "    ffmpeg 不可用（跳过卡片）"
-            ls /usr/share/fonts/opentype/noto/NotoSansCJK-*.ttc >/dev/null 2>&1 \
-              && echo "    CJK 字体就绪 ✔" || echo "    CJK 字体不可用（跳过卡片）"
 
             echo "==> 安装依赖"
             npm ci
