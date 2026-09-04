@@ -6,7 +6,6 @@
 #   1. 构建 —— 安装依赖并用 Vite 打包到 dist/
 #   2. 详情页生成 —— og 卡片 + Vue SSR 预渲染每条「选读」详情页（dist/选读/<id>.html）
 #   3. 公网部署 —— 通过腾讯云 COS 对象存储 + 静态网站托管对外提供服务
-#   4. 同步代码 —— 将代码自动推送到 GitHub 同名仓库（XiGou/hu-chenfeng）
 #
 # 【站点地址 SITE_URL】
 #   `npm run build` 通过 `process.env.SITE_URL` 读取环境变量，将详情页
@@ -28,12 +27,6 @@
 #     COS_BUCKET     存储桶，格式如 `bucket-appid.cos.ap-guangzhou.myqcloud.com`
 #     COS_REGION     地域，如 `ap-guangzhou`
 #   未配置 COS 凭证时，流水线仅执行「构建校验」，部署步骤自动跳过。
-#
-# 【GitHub 同步说明】
-#   通过 imports 引用密钥仓库 `secret-env` 中的 `secret-env.yml` 文件，
-#   该文件包含 GitHub PAT 与用户名（变量名支持 GIT_ACCESS_TOKEN /
-#   GITHUB_PAT / GH_PAT / GH_TOKEN / GITHUB_TOKEN / GITHUB_ACCESS_TOKEN），
-#   用于将代码自动推送到 GitHub 同名仓库。用户名支持 GIT_USERNAME 设置。
 # ==========================================================================
 
 main:
@@ -105,60 +98,3 @@ main:
 
             echo "==> 站点已部署。若已开启 COS 静态网站托管，可访问："
             echo "    https://${COS_BUCKET}/index.html"
-
-        # ---- 同步到 GitHub 同名仓库 ----
-        - name: 同步代码到 GitHub
-          if: '[ -n "$GIT_ACCESS_TOKEN" ] || [ -n "$GITHUB_PAT" ] || [ -n "$GH_PAT" ] || [ -n "$GH_TOKEN" ] || [ -n "$GITHUB_TOKEN" ] || [ -n "$GITHUB_ACCESS_TOKEN" ]'
-          script: |
-            set -e
-            # 兼容多种环境变量命名
-            PAT="${GIT_ACCESS_TOKEN:-${GITHUB_PAT:-${GH_PAT:-${GH_TOKEN:-${GITHUB_TOKEN:-${GITHUB_ACCESS_TOKEN}}}}}}"
-
-            echo "==> 配置 Git 身份"
-            git config --global user.name "${GIT_USERNAME:-${GITHUB_ACTOR:-hu-chenfeng-bot}}"
-            git config --global user.email "${GITHUB_ACTOR_EMAIL:-bot@users.noreply.github.com}"
-
-            echo "==> 配置 GitHub 远程仓库"
-            GITHUB_REPO="XiGou/hu-chenfeng"
-            git remote remove github 2>/dev/null || true
-            git remote add github "https://x-access-token:${PAT}@github.com/${GITHUB_REPO}.git"
-
-            echo "==> 拉取 GitHub 最新 main（若远端有更新则同步到本地）"
-            git fetch github main:refs/remotes/github/main || echo "首次拉取 GitHub 或暂无远端 main，跳过同步"
-
-            echo "==> 将本地 main 同步到 GitHub 最新"
-            if git rev-parse --verify github/main >/dev/null 2>&1; then
-              if git merge-base --is-ancestor github/main HEAD; then
-                echo "本地已包含 GitHub 最新提交，无需 rebase"
-              else
-                echo "GitHub main 与本地存在分叉，尝试 rebase 将本地提交叠加到 GitHub 之上"
-                # rebase 为镜像同步步骤：CNB 是权威源、GitHub 仅镜像。
-                # 历史分叉时优先尝试 rebase；若冲突，说明 GitHub 存在 CNB 没有的提交，
-                # 需记录冲突现场并判定：以 CNB 权威内容为准收敛 GitHub 镜像。
-                set +e
-                if git rebase github/main; then
-                  REBASE_OK=1
-                else
-                  echo "[同步冲突] CNB 与 GitHub 历史分叉，rebase 冲突。"
-                  echo "  记录 GitHub 端独有提交："
-                  git log --oneline github/main..HEAD --format='    %h %s' 2>/dev/null || true
-                  echo "  两端文件差异留档："
-                  git diff --stat HEAD github/main 2>/dev/null || true
-                  echo "  CNB 为权威源、GitHub 为镜像，将以 CNB 为准收敛 GitHub。"
-                  git rebase --abort
-                  REBASE_OK=0
-                fi
-                set -e
-                if [ "$REBASE_OK" = "0" ]; then
-                  echo "==> 以 CNB 权威内容 force 收敛 GitHub 镜像（镜像历史分叉已记录留档）"
-                  git push --force-with-lease github HEAD:main
-                  echo "==> GitHub 镜像已收敛至 CNB 最新内容 ✔"
-                  exit 0
-                fi
-              fi
-            fi
-
-            echo "==> 推送代码到 GitHub（冲突已通过拉取 + rebase 解决，非 force）"
-            git push github HEAD:main
-
-            echo "==> 代码已同步到 GitHub ✔"
