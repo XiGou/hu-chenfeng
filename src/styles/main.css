@@ -610,7 +610,7 @@ a { color: inherit; }
 .entry-title { margin-bottom: 1rem; }
 .entry .entry-meta { margin-top: 0.6rem; }
 
-/* 编者批注：引用式展示，仅左侧竖线，同正文字体、字号略小 */
+/* 编者批注：引用式展示，仅左侧竖线，字号略小 */
 .editor-note {
   display: flex;
   gap: 0.5rem;
@@ -618,21 +618,22 @@ a { color: inherit; }
   margin: 0 0 1.6rem;
   padding: 0 0 0 1.1rem;
   border-left: 3px solid var(--line);
-  font-family: var(--font-serif);
-  font-size: 1.05rem;
-  line-height: 1.9;
+  font-size: 0.9rem;
+  line-height: 1.8;
   color: var(--fg);
 }
 .editor-note-mark {
   flex: none;
-  font-size: 0.72rem;
-  color: var(--fg-faint);
+  font-size: 0.7rem;
+  color: var(--fg-soft);
   letter-spacing: 0.05em;
   white-space: nowrap;
 }
 .editor-note p {
   margin: 0;
-  line-height: 1.9;
+  font-size: 0.9rem;
+  line-height: 1.8;
+  color: var(--fg);
   white-space: pre-line;   /* 多行编者批注按原文换行展示 */
 }
 
