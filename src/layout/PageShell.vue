@@ -22,6 +22,7 @@ const navItems = [
   { key: "viewpoints", label: "观点", href: "./viewpoints.html" },
   { key: "quotations", label: "语录", href: "./quotations.html" },
   { key: "gallery",    label: "展厅", href: "./gallery.html" },
+  { key: "pure",      label: "纯享", href: "./pure.html" },
 ];
 </script>
 

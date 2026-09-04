@@ -131,6 +131,13 @@ function itemLabel(q) {
       >■ 停止</button>
     </div>
 
+    <!-- 纯享模式：黑胶唱机沉浸聆听入口 -->
+    <a class="pb-entry-link" href="./pure.html">
+      <span class="pe-disc" aria-hidden="true">◉</span>
+      <span class="pe-text">进入纯享模式 · 黑胶唱机</span>
+      <span class="pe-arrow" aria-hidden="true">→</span>
+    </a>
+
     <p v-if="keyword && items.length === 0" class="search-empty">
       未找到与“{{ keyword }}”匹配的语录
     </p>
