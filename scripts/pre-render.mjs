@@ -10,7 +10,7 @@
  *      b) 为每条「选读」生成独立详情页 dist/选读/<id>.html：
  *         以 Vite 构建的 detail 壳为模板 → SSR 渲染单条详情内容注入 #app，
  *         并按 id 烘好 og / twitter meta、修正子目录下资源相对路径。
- *      c) 给首页 dist/index.html 注入基础 og meta（og:image 用站卡/首条卡片）。
+ *      c) 给首页 dist/index.html 注入基础 og meta（og:image 用 gallery 图）。
  *
  * 输出：每个 dist/*.html 的 <div id="app"></div> 被替换为完整的 SSR 渲染内容。
  * 浏览器端 JS 用 createSSRApp(...).mount()（SSR 应用 mount 即执行 hydration）恢复交互。
@@ -127,16 +127,11 @@ function buildOgMeta(item) {
   const pageCleanPath = `${DIR_NAME}/${id}`;
   const ogUrl = SITE_URL ? `${SITE_URL}/${pageCleanPath}` : pageCleanPath;
 
-  // og:image —— 优先构建期生成的 og-card；无则退化 gallery 大图。
+  // og:image —— 确定性选取 gallery 大图。
   // 有 SITE_URL 烘绝对 https；无则退回页面相对地址 ../（供浏览器补齐）。
-  const ogCard = path.join(OUT_DIR, "og-cards", `${id}.png`);
-  let imageSite = "";
-  if (fs.existsSync(ogCard)) imageSite = `og-cards/${id}.png`;
-  else {
-    const g = getGalleryImages();
-    const gi = pickGalleryIndex(id || 0, g.length);
-    if (gi >= 0) imageSite = g[gi];
-  }
+  const g = getGalleryImages();
+  const gi = pickGalleryIndex(id || 0, g.length);
+  let imageSite = gi >= 0 ? g[gi] : "";
   const ogImage = SITE_URL ? siteAbsolute(imageSite) : sitePageRel(imageSite);
 
   const audio = SITE_URL ? siteAbsolute(rawAudio) : sitePageRel(rawAudio);
@@ -159,10 +154,6 @@ function buildOgMeta(item) {
     lines.push(`<meta property="og:image" content="${escHtml(ogImage)}">`);
     lines.push(`<meta property="og:image:secure_url" content="${escHtml(ogImage)}">`);
     lines.push(`<meta property="og:image:type" content="image/png">`);
-    if (fs.existsSync(ogCard)) {
-      lines.push(`<meta property="og:image:width" content="1200">`);
-      lines.push(`<meta property="og:image:height" content="630">`);
-    }
     lines.push(`<meta property="og:image:alt" content="${escHtml(displayTitle)}">`);
   }
   lines.push(`<meta name="twitter:card" content="${card}">`);
@@ -277,11 +268,9 @@ function injectIndexOg(api) {
   const galleryImages = getGalleryImages();
   const ogUrl = SITE_URL ? SITE_URL : "index.html";
 
-  // og:image —— 优先站点卡 og-cards/0.png，其次首条选读卡 og-cards/1.png，再退 landscape gallery 图
+  // og:image —— 优先选 landscape 尺寸 gallery 图，否则取首图
   let imageSite = "";
-  if (fs.existsSync(path.join(OUT_DIR, "og-cards", "0.png"))) imageSite = "og-cards/0.png";
-  else if (fs.existsSync(path.join(OUT_DIR, "og-cards", "1.png"))) imageSite = "og-cards/1.png";
-  else if (galleryImages.length) {
+  if (galleryImages.length) {
     const cands = ["gallery/img3.png", "gallery/img4.png", "gallery/img5.png"];
     imageSite = cands.find((c) => galleryImages.includes(c)) || galleryImages[0];
   }
