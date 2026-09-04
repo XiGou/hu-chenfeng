@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="户晨风 · 纯享模式 —— 黑胶唱机式沉浸聆听，遍历全部选读，顺序或随机播放心声。" />
+    <meta name="theme-color" content="#0e0e0e" />
+    <title>纯享模式 · 黑胶唱机 | 户晨风语录精选</title>
+    <link id="favicon" rel="icon" type="image/svg+xml" href="./favicons/apple.svg" />
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="module" src="./src/main/pure.js"></script>
+    <script>
+      (function () {
+        var logos = ["apple", "tesla", "sam"];
+        var pick = logos[Math.floor(Math.random() * logos.length)];
+        var link = document.getElementById("favicon");
+        if (link) {
+          link.setAttribute("href", "./favicons/" + pick + ".svg");
+        }
+      })();
+    </script>
+  </body>
+</html>
