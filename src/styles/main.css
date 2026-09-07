@@ -339,6 +339,7 @@ a { color: inherit; }
 /* ---------- 栏目导航 ---------- */
 .section-nav {
   display: flex;
+  flex-wrap: wrap;
   gap: 0.4rem;
   margin: -1.5rem 0 2.5rem;
   padding-bottom: 1.4rem;
@@ -346,6 +347,7 @@ a { color: inherit; }
 }
 .section-nav a, .section-nav button {
   text-decoration: none;
+  white-space: nowrap;
   background: none;
   border: 1px solid var(--line);
   border-radius: 999px;
