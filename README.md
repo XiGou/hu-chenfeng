@@ -22,6 +22,7 @@
 - **波形播放器**：选读详情页用 Wavesurfer.js 渲染音频波形，带播放/暂停、点按跳转与「播放着色」进度；无 JS 时自动回退原生播放器；连播模式下自动开播、播完自动接续下一条
 - **悬浮 BGM 播放器**：右下角悬浮迷你播放器，可在多首静态 BGM 中任选一首循环播放
 - **独立分享页**：每条选读构建时生成独立静态 HTML（`站点/选读/<id>.html`），含 OG / Twitter Card meta，可直接分享到 X(Twitter) 并点播音频
+- **搜索引擎收录**：构建期自动生成 `sitemap.xml`，收录首页 / 各栏目 / 每条选读的干净 canonical 地址，便于 Google / Bing 等收录页面；配 `SITE_URL` 时烘成绝对 https
 
 ## 🛠 技术栈
 
@@ -37,7 +38,7 @@
 ```bash
 npm install
 npm run dev      # 开发服务器（http://localhost:5173）
-npm run build    # 生产构建 → dist/（MPA + SSR 预渲染 + 选读详情页）
+npm run build    # 生产构建 → dist/（MPA + SSR 预渲染 + 选读详情页 + sitemap.xml）
 npm run preview  # 预览构建产物
 ```
 
@@ -45,12 +46,13 @@ npm run preview  # 预览构建产物
 
 通过根目录 `.cnb.yml` 流水线，push 到 `main` 分支自动构建并部署：
 
-- **构建**：`vite build` → `pre-render.mjs`（SSR 预渲染列表页 + 选读详情页）
+- **构建**：`vite build` → `pre-render.mjs`（SSR 预渲染列表页 + 选读详情页 + 生成 sitemap.xml）
 - **公网部署**：将 `dist/` 静态产物同步到腾讯云 COS 对象存储
 
 > **路径兼容**：构建产物中的页面资源（JS / CSS / 音频 / BGM）均使用**相对路径**引用（`vite.config.js` 中 `base: "./"`），资源文件可适配任意部署位置。
 > 选读详情页 **og meta 通过读取 `SITE_URL` 环境变量**在构建期烘成绝对 https（各部署平台在自身 CI 设置中配置，GitHub Pages 用 `https://xigou.github.io/hu-chenfeng`，CF/COS 用 `https://hu-chenfeng.19960312.xyz`），保证 X/Twitter 等爬虫能正确出预览卡片。未配置时产物保持域名无关，og meta 走相对路径。
 > `og:url` 使用不带 `.html` 后缀的 **canonical 干净地址**（如 `/选读/1`），GitHub Pages 与 Cloudflare 均支持无后缀路径解析到对应 `.html`，同时避免 CF 对 `.html` 走 308 重定向。
+> 构建期同时产出 **`dist/sitemap.xml`**，同样依赖 `SITE_URL` 生成绝对地址供搜索引擎收录；未配置时生成站点相对路径，需接入 `SITE_URL` 后重建。可向 Google Search Console / Bing Webmaster 提交 `{站点}/sitemap.xml`。
 
 ## 📁 项目结构
 
@@ -63,7 +65,7 @@ npm run preview  # 预览构建产物
 ├── pure.html                   # 纯享模式（黑胶唱机）入口 HTML
 ├── vite.config.js              # Vite 配置（MPA 多入口）
 ├── scripts/
-│   └── pre-render.mjs          # SSR 预渲染（列表页 + 选读详情页 + og 注入）
+│   └── pre-render.mjs          # SSR 预渲染（列表页 + 选读详情页 + og 注入 + sitemap.xml）
 ├── src/
 │   ├── layout/
 │   │   └── PageShell.vue       # 共享页面骨架（页头 + 栏目导航 + BGM）

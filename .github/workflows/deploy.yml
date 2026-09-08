@@ -39,7 +39,8 @@ jobs:
   build:
     runs-on: ubuntu-latest
     # GitHub Pages 独立构建 → 注入本部署专属的 SITE_URL，让 og:url/og:image/og:audio
-    # 在构建期直接烘成绝对 https（X/Twitter/微信等爬虫不执行 JS，需要绝对地址出预览卡）。
+    # 在构建期直接烘成绝对 https（X/Twitter/微信等爬虫不执行 JS，需要绝对地址出预览卡）；
+    # 同时产出绝对地址的 sitemap.xml 供搜索引擎收录。
     # 本仓库 GitHub Pages 站点部署在 https://xigou.github.io/hu-chenfeng 子路径下。
     steps:
       - name: 检出代码

@@ -297,6 +297,61 @@ function injectIndexOg(api) {
   console.log("[pre-render] 首页 index.html 已注入 og meta（og:image=" + (ogImage || "无") + "）");
 }
 
+// ---------------------------------------------------------------------------
+// sitemap.xml —— 供搜索引擎收录全站可索引页
+// ---------------------------------------------------------------------------
+/**
+ * 列表栏目页 key → 干净站点路径（不带 .html，与 og:canonical / ShareBar 一致）：
+ *   首页用站点根 ""，其余栏目如 viewpoints / quotations / gallery / pure。
+ */
+const SITEMAP_PAGES = {
+  home: "",            // 站点根（SITE_URL 或相对根）
+  viewpoints: "viewpoints",
+  quotations: "quotations",
+  gallery: "gallery",
+  pure: "pure",
+};
+
+/** 站点根相对路径 → 绝对 https（配 SITE_URL）；未配则返回干净的站点相对路径（留部署侧托管解析） */
+function sitemapLoc(cleanPath) {
+  if (!cleanPath) return SITE_URL || "/";
+  if (SITE_URL) return siteAbsolute(cleanPath); // 配 SITE_URL → 绝对 https
+  return "/" + cleanPath;                        // 未配 → 站点根相对路径
+}
+
+/**
+ * 生成 sitemap.xml 写入 dist/。URL 与 canonical 保持一致、不带 .html；
+ * 中文目录（选读/）按 RFC 3986 做百分号编码。配 SITE_URL 时烘成绝对
+ * https（搜索引擎必需），未配则以站点相对路径写入，供部署侧托管解析。
+ */
+function generateSitemap(api) {
+  const locs = [];
+  // 首页 + 4 个列表栏目页
+  for (const clean of Object.values(SITEMAP_PAGES)) {
+    locs.push(sitemapLoc(clean));
+  }
+  // 每条选读详情页 选读/<id>
+  for (const item of api.listEssence()) {
+    locs.push(encodeURI(sitemapLoc(`${DIR_NAME}/${item.id}`)));
+  }
+
+  const urlset = locs
+    .map((loc) => `  <url>\n    <loc>${escHtml(loc)}</loc>\n  </url>`)
+    .join("\n");
+  const xml =
+    `<?xml version="1.0" encoding="UTF-8"?>\n` +
+    `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n` +
+    `${urlset}\n` +
+    `</urlset>\n`;
+
+  const file = path.join(OUT_DIR, "sitemap.xml");
+  fs.writeFileSync(file, xml, "utf8");
+  console.log(
+    "[pre-render] ✔ sitemap.xml 已生成（" + locs.length + " 个 URL，" +
+      (SITE_URL ? "SITE_URL=" + SITE_URL : "未配 SITE_URL，走相对路径") + "）"
+  );
+}
+
 async function main() {
   console.log("[pre-render] 构建 SSR bundle…");
   const api = await buildSSR();
@@ -305,6 +360,7 @@ async function main() {
   count += await renderListPages(api);
   count += await renderDetailPages(api);
   injectIndexOg(api);
+  generateSitemap(api);
 
   fs.rmSync(SSR_OUT_DIR, { recursive: true, force: true });
   console.log(`[pre-render] 完成：共 ${count} 个页面已全量预渲染。`);
@@ -314,3 +370,4 @@ main().catch((err) => {
   console.error("[pre-render] 失败：", err);
   process.exit(1);
 });
+

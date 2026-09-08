@@ -5,7 +5,8 @@
 # 站点基于 Vite + Vue 3 构建，本流水线负责：
 #   1. 构建 —— 安装依赖并用 Vite 打包到 dist/
 #   2. 详情页生成 —— Vue SSR 预渲染每条「选读」详情页（dist/选读/<id>.html）
-#   3. 公网部署 —— 通过腾讯云 COS 对象存储 + 静态网站托管对外提供服务
+#   3. sitemap —— 构建期产出 dist/sitemap.xml 供搜索引擎收录
+#   4. 公网部署 —— 通过腾讯云 COS 对象存储 + 静态网站托管对外提供服务
 #
 # 【站点地址 SITE_URL】
 #   `npm run build` 通过 `process.env.SITE_URL` 读取环境变量，将详情页
@@ -68,7 +69,7 @@ main:
             npm run build
 
             echo "==> 校验构建产物"
-            for f in dist/index.html dist/viewpoints.html dist/quotations.html dist/gallery.html; do
+            for f in dist/index.html dist/viewpoints.html dist/quotations.html dist/gallery.html dist/sitemap.xml; do
               [ -f "$f" ] || { echo "缺少构建产物: $f"; exit 1; }
             done
             echo "==> Vite 构建通过 ✔"
