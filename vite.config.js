@@ -23,9 +23,19 @@ function devDetailRoutePlugin() {
         } catch {
           decodedPath = req.url.split("?")[0];
         }
+        let id = null;
         const match = decodedPath.match(/^\/选读\/(\d+)(?:\.html)?$/);
         if (match) {
-          const id = match[1];
+          id = match[1];
+        } else if (decodedPath === "/detail.html" || decodedPath === "/detail") {
+          try {
+            const urlObj = new URL(req.url, "http://localhost");
+            id = urlObj.searchParams.get("id") || "1";
+          } catch {
+            id = "1";
+          }
+        }
+        if (id) {
           const templatePath = path.resolve(__dirname, "detail.html");
           if (!fs.existsSync(templatePath)) return next();
           let html = fs.readFileSync(templatePath, "utf8");
@@ -34,6 +44,7 @@ function devDetailRoutePlugin() {
           // 修正 dev 模式下子目录脚本与静态资源引用，使其指向绝对根路径
           html = html
             .replace(/src="\.\/src\//g, 'src="/src/')
+            .replace(/href="\.\/src\//g, 'href="/src/')
             .replace(/href="\.\/favicons\//g, 'href="/favicons/')
             .replace(/\.\/favicons\//g, '/favicons/');
           try {

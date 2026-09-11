@@ -259,10 +259,10 @@ a { color: inherit; }
 }
 .entry-title {
   font-family: var(--font-serif);
-  font-size: 2.1rem;
+  font-size: 2.3rem;
   line-height: 1.4;
   color: var(--fg);
-  margin-bottom: 1.4rem;
+  margin-bottom: 1.5rem;
 }
 /* 音频置于正文之前，带波形可视化 */
 .entry .entry-audio { margin: 0.2rem 0 1.8rem; }
@@ -270,14 +270,20 @@ a { color: inherit; }
 /* ---------- 正文：Markdown 渲染，保留换行与段落 ---------- */
 .entry-text {
   font-family: var(--font-serif);
-  font-size: 1.55rem;
-  line-height: 1.85;
+  font-size: 1.8rem;
+  line-height: 1.95;
   color: var(--fg);
   overflow-wrap: break-word;
 }
-.entry-text > * { margin: 0 0 1.1rem; }
+.entry-text > * { margin: 0 0 1.35rem; }
 .entry-text > *:last-child { margin-bottom: 0; }
-.entry-text p { margin-bottom: 1.1rem; }
+.entry-text p {
+  font-family: inherit;
+  font-size: 1.8rem;
+  line-height: 1.95;
+  color: var(--fg);
+  margin-bottom: 1.35rem;
+}
 .entry-text br { display: block; content: ""; margin: 0; }
 .entry-text strong { font-weight: 600; }
 .entry-text em { font-style: italic; }
@@ -294,7 +300,9 @@ a { color: inherit; }
   border-left: 3px solid var(--line);
   padding-left: 1.1rem;
   color: var(--fg-soft);
-  margin: 0 0 1.2rem;
+  margin: 0 0 1.35rem;
+  font-size: 1.8rem;
+  line-height: 1.95;
 }
 .entry-text h1, .entry-text h2, .entry-text h3 {
   font-family: var(--font-serif);
@@ -561,8 +569,9 @@ a { color: inherit; }
 @media (max-width: 520px) {
   #app { padding: 0 18px 4rem; }
   .site-head { padding-top: 3.5rem; }
-  .entry-title { font-size: 1.7rem; }
-  .entry-text { font-size: 1.3rem; }
+  .entry-title { font-size: 1.85rem; }
+  .entry-text,
+  .entry-text p { font-size: 1.5rem; line-height: 1.85; }
   .editor-note { font-size: 0.95rem; }
 }
 
