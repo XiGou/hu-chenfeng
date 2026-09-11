@@ -22,7 +22,19 @@ const el = document.querySelector("#app");
 if (!el) throw new Error("#app 元素缺失");
 
 const rawId = el && el.getAttribute && el.getAttribute("data-id");
-const id = rawId !== null ? Number(rawId) : NaN;
+let id = rawId !== null ? Number(rawId) : NaN;
+if (Number.isNaN(id) && typeof window !== "undefined") {
+  // 开发调试或直接访问容错：从 URL 中解析 id（如 /选读/1.html 或 /detail.html?id=1）
+  try {
+    const m = decodeURIComponent(window.location.pathname).match(/选读\/(\d+)/);
+    if (m) {
+      id = Number(m[1]);
+    } else {
+      const q = new URLSearchParams(window.location.search).get("id");
+      if (q) id = Number(q);
+    }
+  } catch {}
+}
 const item = essence.find((e) => e.id === id);
 
 function mount() {
