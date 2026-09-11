@@ -53,7 +53,7 @@ function mount() {
     } catch {}
   }
   if (el.children.length) {
-    createSSRApp(EssenceDetail, { item, relRoot, mode }).mount(el);
+    createSSRApp(EssenceDetail, { item, relRoot, mode: "off" }).mount(el);
   } else {
     createApp(EssenceDetail, { item, relRoot, mode }).mount(el);
   }

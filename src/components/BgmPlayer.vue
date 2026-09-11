@@ -194,12 +194,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <!-- 悬浮迷你播放器 -->
   <div class="bgm" :class="{ 'bgm--open': open }">
-    <!--
-      audio 元素始终渲染（不随面板展开/收起而销毁），
-      这样即使收起面板或切换页面，音乐也能持续播放。
-    -->
     <audio
       v-if="current && currentAudioSrc"
       ref="audioEl"
@@ -213,7 +208,6 @@ onBeforeUnmount(() => {
       @loadedmetadata="onLoadedMetadata"
     ></audio>
 
-    <!-- 悬浮球 -->
     <button
       class="bgm-ball"
       type="button"
@@ -229,7 +223,6 @@ onBeforeUnmount(() => {
       </svg>
     </button>
 
-    <!-- 展开面板 -->
     <transition name="bgm">
       <div v-if="open" class="bgm-panel">
         <div class="bgm-head">
@@ -237,7 +230,6 @@ onBeforeUnmount(() => {
           <button class="bgm-close" type="button" aria-label="关闭" @click="toggle">✕</button>
         </div>
 
-        <!-- 曲目选择 -->
         <ul class="bgm-tracks">
           <li v-for="t in bgmTracks" :key="t.id">
             <button

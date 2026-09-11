@@ -71,7 +71,7 @@ export default defineConfig({
   //  - 本地静态托管 / 对象存储
   // 相对路径（"./"）让 index.html 内的资源引用无需域名前缀即可正确加载
   base: "./",
-  plugins: [vue(), devDetailRoutePlugin()],
+  plugins: [vue({ template: { compilerOptions: { comments: false } } }), devDetailRoutePlugin()],
   resolve: {
     alias: {
       "@": fileURLToPath(new URL("./src", import.meta.url)),

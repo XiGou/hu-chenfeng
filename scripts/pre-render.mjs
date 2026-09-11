@@ -169,9 +169,10 @@ async function buildSSR() {
   fs.rmSync(SSR_OUT_DIR, { recursive: true, force: true });
   fs.mkdirSync(SSR_OUT_DIR, { recursive: true });
   await build({
+    mode: "production",
     root: ROOT,
     configFile: false,
-    plugins: [vuePlugin()],
+    plugins: [vuePlugin({ template: { compilerOptions: { comments: false } } })],
     base: "./",
     build: {
       ssr: path.join(ROOT, "src/ssr/entry.js"),

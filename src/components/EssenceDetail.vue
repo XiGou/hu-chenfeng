@@ -156,41 +156,40 @@ onBeforeUnmount(() => {
 
 <template>
   <article class="entry">
-    <a class="brand" :href="rel + 'index.html'">户晨风 · 摘录</a>
+    <a key="brand" class="brand" :href="rel + 'index.html'">户晨风 · 摘录</a>
 
-    <!-- 连播状态条（仅连播时显示，SSR 不输出） -->
-    <div v-if="isPlaying" class="pb-banner" role="status">
+    <div v-if="isPlaying" key="pb-banner" class="pb-banner" role="status">
       <span class="pb-dot" aria-hidden="true"></span>
       <span class="pb-label">{{ modeLabel }}</span>
       <span class="pb-pos">当前第 {{ props.item.id }} 条</span>
       <button type="button" class="pb-stop" @click="stopPlayback">停止连播</button>
     </div>
 
-    <div class="entry-meta">
+    <div key="entry-meta" class="entry-meta">
       <time v-if="dateLabel">{{ dateLabel }}</time>
       <span v-if="themes.length" class="theme-list">
         <span v-for="(t, ti) in themes" :key="ti" class="theme">{{ t }}</span>
       </span>
     </div>
 
-    <h1 class="entry-title">{{ displayTitle }}</h1>
+    <h1 key="entry-title" class="entry-title">{{ displayTitle }}</h1>
 
-    <div v-if="note" class="editor-note" role="note">
+    <div v-if="note" key="editor-note" class="editor-note" role="note">
       <span class="editor-note-mark">编者注</span>
       <p>{{ note }}</p>
     </div>
 
-    <figure v-if="previewImg" class="preview">
+    <figure v-if="previewImg" key="preview" class="preview">
       <img :src="previewImg" :alt="displayTitle" loading="lazy" />
     </figure>
 
-    <div v-if="audioPageUrl" class="entry-audio">
+    <div v-if="audioPageUrl" key="entry-audio" class="entry-audio">
       <WaveAudio :src="audioPageUrl" :module-url="waveModuleRel" :mode="mode" />
     </div>
 
-    <div class="entry-text" v-html="contentHtml"></div>
+    <div key="entry-text" class="entry-text" v-html="contentHtml"></div>
 
-    <div v-if="video || links.length" class="media">
+    <div v-if="video || links.length" key="media" class="media">
       <div v-if="video" class="media-video-wrap">
         <iframe :src="video" :title="displayTitle" loading="lazy"
           allowfullscreen allow="encrypted-media; picture-in-picture"></iframe>
@@ -203,20 +202,19 @@ onBeforeUnmount(() => {
       </div>
     </div>
 
-    <p v-if="source" class="source">出处：{{ source }}</p>
+    <p v-if="source" key="source" class="source">出处：{{ source }}</p>
 
-    <div class="share-bar" role="group" aria-label="分享">
+    <div key="share-bar" class="share-bar" role="group" aria-label="分享">
       <ShareBar :title="displayTitle" />
       <span class="share-bar-note">分享用当前干净地址（无 .html 后缀），直接发推即可出卡片</span>
     </div>
 
-    <!-- 上一条 · 下一条：静态导航（无 JS 可用；连播时播完自动跳下一条） -->
-    <nav class="pb-nav" aria-label="选读导航">
+    <nav key="pb-nav" class="pb-nav" aria-label="选读导航">
       <a v-if="prevId !== null" class="pb-nav-link" :href="detailHref(prevId, rel)">← 上一条</a>
       <a v-if="nextId !== null" class="pb-nav-link pb-nav-next" :href="detailHref(nextId, rel)">下一条 →</a>
     </nav>
 
-    <a class="back-link" :href="rel + 'index.html'">← 返回全部选读</a>
+    <a key="back-link" class="back-link" :href="rel + 'index.html'">← 返回全部选读</a>
   </article>
 
   <BgmPlayer :rel-root="rel" />

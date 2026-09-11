@@ -117,10 +117,8 @@ onBeforeUnmount(() => {
 
 <template>
   <div class="wave-audio">
-    <!-- 无 JS / 波形加载失败兜底：原生播放器（波形接管成功后隐藏） -->
     <audio ref="nativeAudio" controls preload="metadata" :src="src" :hidden="showWave"></audio>
 
-    <!-- 波形播放器容器（默认隐藏，波形接管成功后显示） -->
     <div ref="waveBox" class="wave-box" :hidden="!showWave">
       <div class="wave-bar">
         <button ref="playBtn" type="button" class="wave-play" aria-label="播放">
