@@ -19,18 +19,20 @@ export function essenceIds() {
   return essence.map((e) => e.id);
 }
 
-/** 选读详情页相对 URL（首页/详情页均可跳转） */
-export function detailHref(id) {
-  return "./" + encodeURIComponent(DETAIL_DIR) + "/" + id + ".html";
+/** 选读详情页相对 URL（首页传 default "./"，详情页可传 "../"） */
+export function detailHref(id, relRoot = "./") {
+  const rel = relRoot ? relRoot.replace(/\/?$/, "/") : "./";
+  return rel + encodeURIComponent(DETAIL_DIR) + "/" + id + ".html";
 }
 
 /**
  * 连播到下一条选读（页面级跳转）。
  * @param {number} fromId 当前选读 id
  * @param {"seq"|"random"} mode 连播模式
+ * @param {string} [relRoot=""] 相对路径基准（未提供时在详情页自动推导 "../"）
  * @returns {number|null} 打开的下一条 id（无数据时 null）
  */
-export function goNext(fromId, mode) {
+export function goNext(fromId, mode, relRoot = "") {
   const ids = essenceIds();
   if (!ids.length) return null;
   let next;
@@ -45,7 +47,16 @@ export function goNext(fromId, mode) {
     const i = ids.indexOf(Number(fromId));
     next = i === -1 ? ids[0] : ids[(i + 1) % ids.length];
   }
-  window.location.href = detailHref(next);
+  let base = relRoot;
+  if (!base && typeof window !== "undefined") {
+    try {
+      const p = decodeURIComponent(window.location.pathname);
+      if (p.includes("/" + DETAIL_DIR + "/") || p.endsWith("/" + DETAIL_DIR)) {
+        base = "../";
+      }
+    } catch {}
+  }
+  window.location.href = detailHref(next, base || "./");
   return next;
 }
 

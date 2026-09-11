@@ -43,10 +43,19 @@ function mount() {
     return;
   }
   const mode = getMode();
+  let relRoot = "../";
+  if (typeof window !== "undefined") {
+    try {
+      const p = decodeURIComponent(window.location.pathname);
+      if (!p.includes("选读")) {
+        relRoot = "./";
+      }
+    } catch {}
+  }
   if (el.children.length) {
-    createSSRApp(EssenceDetail, { item, relRoot: "../", mode }).mount(el);
+    createSSRApp(EssenceDetail, { item, relRoot, mode }).mount(el);
   } else {
-    createApp(EssenceDetail, { item, relRoot: "../", mode }).mount(el);
+    createApp(EssenceDetail, { item, relRoot, mode }).mount(el);
   }
 }
 mount();

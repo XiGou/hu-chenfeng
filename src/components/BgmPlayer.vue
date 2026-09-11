@@ -1,18 +1,50 @@
 <script setup>
-import { ref, computed, onMounted, watch } from "vue";
+import { ref, computed, onMounted, onBeforeUnmount, nextTick } from "vue";
 import { bgmTracks } from "../data/bgm.js";
+
+const props = defineProps({
+  /** 相对站点根 dist/ 的路径前缀（根栏目页为 ./，选读详情页为 ../） */
+  relRoot: { type: String, default: "./" },
+});
+
+const STORAGE_KEY_TRACK = "hcf_bgm_track_id";
+const STORAGE_KEY_PLAYING = "hcf_bgm_playing";
+const STORAGE_KEY_TIME = "hcf_bgm_time";
 
 // 播放器状态
 const open = ref(false);
 const playing = ref(false);
 const trackId = ref("");
 const audioEl = ref(null);
+const pendingSeekTime = ref(0);
 
 const availableTracks = computed(() => bgmTracks.filter((t) => t.src));
 
 const current = computed(
   () => bgmTracks.find((t) => t.id === trackId.value) || null
 );
+
+function isExt(s) {
+  return /^https?:\/\//.test(s || "");
+}
+
+function cleanSite(p) {
+  return String(p || "")
+    .replace(/^public\//, "")
+    .replace(/^\.\/?/, "");
+}
+
+function pageUrl(sitePath) {
+  const c = cleanSite(sitePath);
+  if (!c) return "";
+  if (isExt(c)) return c;
+  const rel = (props.relRoot || "./").replace(/\/?$/, "/");
+  return rel + c;
+}
+
+const currentAudioSrc = computed(() => {
+  return current.value && current.value.src ? pageUrl(current.value.src) : "";
+});
 
 function toggle() {
   open.value = !open.value;
@@ -22,14 +54,25 @@ function toggle() {
 function pick(id) {
   const t = bgmTracks.find((x) => x.id === id);
   if (!t || !t.src) return;
+  pendingSeekTime.value = 0;
   trackId.value = id;
   playing.value = true;
+  try {
+    localStorage.setItem(STORAGE_KEY_TRACK, id);
+    localStorage.setItem(STORAGE_KEY_PLAYING, "true");
+    localStorage.setItem(STORAGE_KEY_TIME, "0");
+  } catch {}
   nextTickPlay();
 }
 
 function nextTickPlay() {
   requestAnimationFrame(() => {
-    if (audioEl.value) audioEl.value.play();
+    if (audioEl.value) {
+      audioEl.value.play().catch(() => {
+        playing.value = false;
+        try { localStorage.setItem(STORAGE_KEY_PLAYING, "false"); } catch {}
+      });
+    }
   });
 }
 
@@ -38,26 +81,114 @@ function togglePlay() {
   if (playing.value) {
     audioEl.value.pause();
     playing.value = false;
+    try {
+      localStorage.setItem(STORAGE_KEY_PLAYING, "false");
+      localStorage.setItem(STORAGE_KEY_TIME, String(audioEl.value.currentTime || 0));
+    } catch {}
   } else {
-    audioEl.value.play();
+    if (pendingSeekTime.value > 0 && audioEl.value.duration && pendingSeekTime.value < audioEl.value.duration) {
+      audioEl.value.currentTime = pendingSeekTime.value;
+      pendingSeekTime.value = 0;
+    }
     playing.value = true;
+    try {
+      localStorage.setItem(STORAGE_KEY_PLAYING, "true");
+    } catch {}
+    audioEl.value.play().catch(() => {
+      playing.value = false;
+      try { localStorage.setItem(STORAGE_KEY_PLAYING, "false"); } catch {}
+    });
   }
 }
 
 function onPlay() {
   playing.value = true;
+  try { localStorage.setItem(STORAGE_KEY_PLAYING, "true"); } catch {}
 }
 function onPause() {
   playing.value = false;
+  try { localStorage.setItem(STORAGE_KEY_PLAYING, "false"); } catch {}
 }
 function onEnded() {
   playing.value = false;
+  try {
+    localStorage.setItem(STORAGE_KEY_PLAYING, "false");
+    localStorage.setItem(STORAGE_KEY_TIME, "0");
+  } catch {}
 }
 
-// 首次挂载：默认选中第一首可用的 BGM（不自动播放，由用户点击播放）
+let lastSavedTime = 0;
+function onTimeUpdate() {
+  const now = Date.now();
+  if (now - lastSavedTime > 1000 && audioEl.value) {
+    lastSavedTime = now;
+    try {
+      localStorage.setItem(STORAGE_KEY_TIME, String(audioEl.value.currentTime || 0));
+    } catch {}
+  }
+}
+
+function onLoadedMetadata() {
+  if (pendingSeekTime.value > 0 && audioEl.value) {
+    if (audioEl.value.duration && pendingSeekTime.value < audioEl.value.duration) {
+      audioEl.value.currentTime = pendingSeekTime.value;
+    }
+    pendingSeekTime.value = 0;
+  }
+}
+
+function onBeforeUnload() {
+  if (audioEl.value) {
+    try {
+      localStorage.setItem(STORAGE_KEY_TIME, String(audioEl.value.currentTime || 0));
+      localStorage.setItem(STORAGE_KEY_PLAYING, String(playing.value));
+      if (trackId.value) {
+        localStorage.setItem(STORAGE_KEY_TRACK, trackId.value);
+      }
+    } catch {}
+  }
+}
+
 onMounted(() => {
-  if (availableTracks.value.length && !trackId.value) {
+  let savedTrackId = null;
+  let savedPlaying = false;
+  let savedTime = 0;
+
+  try {
+    savedTrackId = localStorage.getItem(STORAGE_KEY_TRACK);
+    savedPlaying = localStorage.getItem(STORAGE_KEY_PLAYING) === "true";
+    savedTime = parseFloat(localStorage.getItem(STORAGE_KEY_TIME) || "0");
+  } catch {}
+
+  if (savedTrackId && availableTracks.value.some((t) => t.id === savedTrackId)) {
+    trackId.value = savedTrackId;
+  } else if (availableTracks.value.length && !trackId.value) {
     trackId.value = availableTracks.value[0].id;
+  }
+
+  if (Number.isFinite(savedTime) && savedTime > 0) {
+    pendingSeekTime.value = savedTime;
+  }
+
+  if (savedPlaying) {
+    playing.value = true;
+    nextTick(() => {
+      if (audioEl.value) {
+        audioEl.value.play().catch((err) => {
+          console.warn("[BGM] 浏览器阻止自动播放:", err);
+          playing.value = false;
+          try { localStorage.setItem(STORAGE_KEY_PLAYING, "false"); } catch {}
+        });
+      }
+    });
+  }
+
+  window.addEventListener("beforeunload", onBeforeUnload);
+});
+
+onBeforeUnmount(() => {
+  if (typeof window !== "undefined") {
+    window.removeEventListener("beforeunload", onBeforeUnload);
   }
 });
 </script>
@@ -70,14 +201,16 @@ onMounted(() => {
       这样即使收起面板或切换页面，音乐也能持续播放。
     -->
     <audio
-      v-if="current"
+      v-if="current && currentAudioSrc"
       ref="audioEl"
-      :src="current.src"
+      :src="currentAudioSrc"
       loop
       preload="none"
       @play="onPlay"
       @pause="onPause"
       @ended="onEnded"
+      @timeupdate="onTimeUpdate"
+      @loadedmetadata="onLoadedMetadata"
     ></audio>
 
     <!-- 悬浮球 -->

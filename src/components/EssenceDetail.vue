@@ -30,6 +30,7 @@ import { detailHref, goNext } from "../data/lib/playlist.js";
 import { setEndedHandler } from "../data/lib/audio-registry.js";
 import WaveAudio from "./WaveAudio.vue";
 import ShareBar from "./ShareBar.vue";
+import BgmPlayer from "./BgmPlayer.vue";
 
 const props = defineProps({
   item: { type: Object, required: true },
@@ -126,7 +127,7 @@ function stopPlayback() {
 /** 本条播完 → 连播打开下一条（页面级跳转） */
 function advance() {
   if (mode.value === "off") return;
-  goNext(props.item.id, mode.value);
+  goNext(props.item.id, mode.value, rel.value);
 }
 
 onMounted(() => {
@@ -211,10 +212,12 @@ onBeforeUnmount(() => {
 
     <!-- 上一条 · 下一条：静态导航（无 JS 可用；连播时播完自动跳下一条） -->
     <nav class="pb-nav" aria-label="选读导航">
-      <a v-if="prevId !== null" class="pb-nav-link" :href="detailHref(prevId)">← 上一条</a>
-      <a v-if="nextId !== null" class="pb-nav-link pb-nav-next" :href="detailHref(nextId)">下一条 →</a>
+      <a v-if="prevId !== null" class="pb-nav-link" :href="detailHref(prevId, rel)">← 上一条</a>
+      <a v-if="nextId !== null" class="pb-nav-link pb-nav-next" :href="detailHref(nextId, rel)">下一条 →</a>
     </nav>
 
     <a class="back-link" :href="rel + 'index.html'">← 返回全部选读</a>
   </article>
+
+  <BgmPlayer :rel-root="rel" />
 </template>
