@@ -259,8 +259,8 @@ a { color: inherit; }
 }
 .entry-title {
   font-family: var(--font-serif);
-  font-size: 1.9rem;
-  line-height: 1.45;
+  font-size: 2.1rem;
+  line-height: 1.4;
   color: var(--fg);
   margin-bottom: 1.4rem;
 }
@@ -270,8 +270,8 @@ a { color: inherit; }
 /* ---------- 正文：Markdown 渲染，保留换行与段落 ---------- */
 .entry-text {
   font-family: var(--font-serif);
-  font-size: 1.35rem;
-  line-height: 1.9;
+  font-size: 1.55rem;
+  line-height: 1.85;
   color: var(--fg);
   overflow-wrap: break-word;
 }
@@ -561,8 +561,9 @@ a { color: inherit; }
 @media (max-width: 520px) {
   #app { padding: 0 18px 4rem; }
   .site-head { padding-top: 3.5rem; }
-  .entry-text { font-size: 1.15rem; }
-  .editor-note { font-size: 0.9rem; }
+  .entry-title { font-size: 1.7rem; }
+  .entry-text { font-size: 1.3rem; }
+  .editor-note { font-size: 0.95rem; }
 }
 
 /* ---------- 减少动效偏好 ---------- */
